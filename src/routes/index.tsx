@@ -93,7 +93,7 @@ function Index() {
         className="mx-auto grid max-w-[1600px] gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]"
       >
         <section className="flex flex-col gap-4">
-          {isMobile && <DistrictSearch />}
+          <DistrictSearch />
           <div className="h-[420px] lg:h-[560px]">
             <WarsawMap />
           </div>
