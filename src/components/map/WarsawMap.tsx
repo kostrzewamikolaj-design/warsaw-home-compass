@@ -5,8 +5,28 @@ import { buildDistrictFeatures } from "./buildDistrictGeo";
 import { DISTRICT_BY_SLUG, WARSAW_CENTER } from "@/data/districts";
 import { useCalcStore } from "@/store/useCalcStore";
 
-const POSITRON_STYLE =
-  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const POSITRON_RASTER_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-positron": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution:
+        '© <a href="https://carto.com/attributions">CARTO</a> · © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    },
+  },
+  glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  layers: [
+    { id: "bg", type: "background", paint: { "background-color": "#0b1220" } },
+    { id: "carto-positron", type: "raster", source: "carto-positron" },
+  ],
+};
 
 export function WarsawMap() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,12 +45,17 @@ export function WarsawMap() {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: POSITRON_STYLE,
+      style: POSITRON_RASTER_STYLE,
       center: WARSAW_CENTER,
       zoom: 10.2,
       attributionControl: { compact: true },
     });
     mapRef.current = map;
+
+    // Ensure proper sizing once the container has laid out
+    requestAnimationFrame(() => map.resize());
+    const ro = new ResizeObserver(() => map.resize());
+    ro.observe(containerRef.current);
 
     map.on("load", () => {
       map.addSource("districts", { type: "geojson", data: fc, promoteId: "slug" });
@@ -158,6 +183,7 @@ export function WarsawMap() {
     });
 
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
     };
