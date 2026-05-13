@@ -100,6 +100,16 @@ const polygonPath = (coordinates: number[][][]) =>
     )
     .join(" ");
 
+const normalizedKeyPart = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g, "l")
+    .replace(/Ł/g, "L")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+
 const formatYear = (value: number | null) => (value === null ? "Brak momentu opłacalności" : `${number.format(value)} lat`);
 
 const bandLabels = {
@@ -462,9 +472,14 @@ export default function Dashboard() {
 
   const districtShapes = useMemo(() => {
     if (!enrichedGeojson) return [];
-    return enrichedGeojson.features.map((feature) => {
+    return enrichedGeojson.features.map((feature, index) => {
       const name = String((feature.properties as { name?: string } | null)?.name ?? "");
       const market = districtByName.get(name);
+      const normalizedName = normalizedKeyPart(name);
+      const baseId = market?.id ?? (normalizedName || `district-${index}`);
+      const featureId = feature.id ? normalizedKeyPart(String(feature.id)) : index;
+      const renderKey = `${baseId}-${featureId}`;
+      const districtId = market?.id ?? baseId;
       const coordinates = feature.geometry.type === "Polygon" ? feature.geometry.coordinates : [];
       const flat = coordinates.flat();
       const center = flat.reduce(
@@ -477,7 +492,8 @@ export default function Dashboard() {
       );
       const projected = flat.length ? projectPoint([center[0] / flat.length, center[1] / flat.length]) : [0, 0];
       return {
-        id: market?.id ?? name,
+        renderKey,
+        districtId,
         name,
         market,
         path: polygonPath(coordinates),
@@ -487,7 +503,7 @@ export default function Dashboard() {
     });
   }, [enrichedGeojson]);
 
-  const activeShape = districtShapes.find((shape) => shape.id === (hoveredId ?? selectedId));
+  const activeShape = districtShapes.find((shape) => shape.districtId === (hoveredId ?? selectedId));
   const appreciationHint = `Zakres dla segmentu ${bandLabels[selected.band]}: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak jest bazowym założeniem, które model łączy z profilem dzielnicy.`;
   const comparisonData = [
     {
@@ -604,20 +620,20 @@ export default function Dashboard() {
                 <g>
                   {districtShapes.map((shape) => (
                     <path
-                      key={shape.id}
+                      key={shape.renderKey}
                       d={shape.path}
-                      data-district={shape.id}
+                      data-district={shape.districtId}
                       fill={ratioColor(shape.ratio)}
-                      className={`${shape.id === selectedId ? "selected" : ""} ${shape.id === hoveredId ? "hovered" : ""} ${shape.id === compareId ? "compared" : ""}`}
-                      onMouseEnter={() => setHoveredId(shape.id)}
+                      className={`${shape.districtId === selectedId ? "selected" : ""} ${shape.districtId === hoveredId ? "hovered" : ""} ${shape.districtId === compareId ? "compared" : ""}`}
+                      onMouseEnter={() => setHoveredId(shape.districtId)}
                       onMouseLeave={() => setHoveredId(null)}
-                      onClick={() => setSelectedId(shape.id)}
+                      onClick={() => setSelectedId(shape.districtId)}
                     />
                   ))}
                 </g>
                 <g className="district-label-layer">
                   {districtShapes.map((shape) => (
-                    <text key={`${shape.id}-label`} x={shape.label[0]} y={shape.label[1]} className={shape.id === selectedId ? "selected" : ""}>
+                    <text key={`${shape.renderKey}-label`} x={shape.label[0]} y={shape.label[1]} className={shape.districtId === selectedId ? "selected" : ""}>
                       {shape.name}
                     </text>
                   ))}
@@ -627,15 +643,15 @@ export default function Dashboard() {
                     <>
                       <circle cx={activeShape.label[0]} cy={activeShape.label[1] - 32} r="23" />
                       <text x={activeShape.label[0]} y={activeShape.label[1] - 26}>
-                        {activeShape.id === selectedId ? "1" : "i"}
+                        {activeShape.districtId === selectedId ? "1" : "i"}
                       </text>
                     </>
                   ) : null}
                   {compare
                     ? districtShapes
-                        .filter((shape) => shape.id === compare.id)
+                        .filter((shape) => shape.districtId === compare.id)
                         .map((shape) => (
-                          <g key={`${shape.id}-compare`}>
+                          <g key={`${shape.renderKey}-compare`}>
                             <circle cx={shape.label[0]} cy={shape.label[1] - 32} r="21" className="compare-marker" />
                             <text x={shape.label[0]} y={shape.label[1] - 26}>
                               2
@@ -646,8 +662,8 @@ export default function Dashboard() {
                 </g>
               </svg>
               {activeShape?.market ? (
-                <motion.div className="map-popover" key={activeShape.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                  <span>{activeShape.id === selectedId ? "Wybrana dzielnica" : "Podgląd dzielnicy"}</span>
+                <motion.div className="map-popover" key={activeShape.renderKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <span>{activeShape.districtId === selectedId ? "Wybrana dzielnica" : "Podgląd dzielnicy"}</span>
                   <strong>{activeShape.name}</strong>
                   <small>
                     {money.format(activeShape.market.pricePerM2)}/m² · najem {money.format(activeShape.market.rentPerM2)}/m²
@@ -812,7 +828,7 @@ export default function Dashboard() {
                     <Tooltip formatter={(value) => money.format(Number(value))} />
                     <Bar dataKey="price" name="Cena / m²" radius={[0, 8, 8, 0]}>
                       {comparisonData.map((entry, index) => (
-                        <Cell key={entry.name} fill={index === 0 ? "#3157ff" : "#8d54ff"} />
+                        <Cell key={`${entry.name}-${index}`} fill={index === 0 ? "#3157ff" : "#8d54ff"} />
                       ))}
                     </Bar>
                   </BarChart>
