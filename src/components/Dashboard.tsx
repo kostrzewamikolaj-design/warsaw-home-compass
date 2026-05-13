@@ -262,18 +262,17 @@ function DistrictCard({
 }
 
 export default function Dashboard() {
-  const restored = useMemo(parseHash, []);
-  const [selectedId, setSelectedId] = useState(restored?.districtId && districtById.has(restored.districtId) ? restored.districtId : "mokotow");
-  const [compareId, setCompareId] = useState<string | null>(
-    restored?.compareId && districtById.has(restored.compareId) ? restored.compareId : "wola"
-  );
-  const [settings, setSettings] = useState<Settings>({ ...defaultSettings, ...restored?.settings });
+  const [selectedId, setSelectedId] = useState("mokotow");
+  const [compareId, setCompareId] = useState<string | null>("wola");
+  const [settings, setSettings] = useState<Settings>({ ...defaultSettings });
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(true);
   const [query, setQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState("");
+  const actionMessageIdRef = useRef(0);
+  const actionTimerRef = useRef<number | null>(null);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -282,6 +281,18 @@ export default function Dashboard() {
   const selected = districtById.get(selectedId) ?? districts[0];
   const compare = compareId ? districtById.get(compareId) ?? null : null;
   const selectedDistricts = [selected, compare].filter(Boolean) as DistrictMarket[];
+
+  useEffect(() => {
+    const restored = parseHash();
+    if (!restored) return;
+    if (restored.districtId && districtById.has(restored.districtId)) {
+      setSelectedId(restored.districtId);
+    }
+    setCompareId(restored.compareId && districtById.has(restored.compareId) ? restored.compareId : null);
+    if (restored.settings) {
+      setSettings((current) => ({ ...current, ...restored.settings }));
+    }
+  }, []);
 
   const enrichedGeojson = useMemo(() => {
     if (!geojson) return null;
@@ -378,10 +389,27 @@ export default function Dashboard() {
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings((current) => ({ ...current, [key]: value }));
 
-  const flashActionMessage = (message: string) => {
+  const flashActionMessage = (message: string, duration = 4600) => {
+    actionMessageIdRef.current += 1;
+    const messageId = actionMessageIdRef.current;
+    if (actionTimerRef.current) {
+      window.clearTimeout(actionTimerRef.current);
+    }
     setActionMessage(message);
-    window.setTimeout(() => setActionMessage(""), 3200);
+    actionTimerRef.current = window.setTimeout(() => {
+      if (actionMessageIdRef.current === messageId) {
+        setActionMessage("");
+        actionTimerRef.current = null;
+      }
+    }, duration);
   };
+
+  useEffect(() => {
+    const pendingMessage = window.sessionStorage.getItem("dashboard-action-message");
+    if (!pendingMessage) return;
+    window.sessionStorage.removeItem("dashboard-action-message");
+    flashActionMessage(pendingMessage);
+  }, []);
 
   const applyScenario = (key: ScenarioKey) => {
     const scenario = scenarios[key];
@@ -391,23 +419,36 @@ export default function Dashboard() {
   const share = async () => {
     const hash = hashState(selectedId, compareId, settings);
     const url = `${window.location.origin}${window.location.pathname}#${hash}`;
-    window.history.replaceState(null, "", `#${hash}`);
-    try {
-      await navigator.clipboard?.writeText(url);
-      flashActionMessage("Link do analizy został skopiowany.");
-    } catch {
-      flashActionMessage("Link zapisany w adresie strony. Możesz skopiować go z paska przeglądarki.");
+    const fallbackMessage = "Link jest gotowy w adresie strony.";
+    window.sessionStorage.setItem("dashboard-action-message", fallbackMessage);
+    window.history.replaceState(window.history.state, "", `#${hash}`);
+    flashActionMessage(fallbackMessage);
+    window.setTimeout(() => window.sessionStorage.removeItem("dashboard-action-message"), 5000);
+
+    if (navigator.clipboard?.writeText) {
+      void Promise.race([
+        navigator.clipboard.writeText(url),
+        new Promise((_, reject) => window.setTimeout(() => reject(new Error("Clipboard timeout")), 1200))
+      ])
+        .then(() => flashActionMessage("Link do analizy został skopiowany."))
+        .catch(() => undefined);
     }
   };
 
   const exportPdf = async () => {
     if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.6 });
-    const image = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`warszawa-najem-czy-zakup-${selected.id}.pdf`);
-    flashActionMessage("PDF został wygenerowany.");
+    flashActionMessage("Generuję PDF...", 12000);
+    try {
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+      const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.6 });
+      const image = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
+      pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`warszawa-najem-czy-zakup-${selected.id}.pdf`);
+      flashActionMessage("PDF został wygenerowany.");
+    } catch {
+      flashActionMessage("Nie udało się wygenerować PDF. Spróbuj ponownie.");
+    }
   };
 
   const filteredDistricts = districts.filter((district) => district.name.toLowerCase().includes(query.toLowerCase()));
@@ -511,11 +552,11 @@ export default function Dashboard() {
             Porównaj dzielnice
           </button>
           <div className="topbar-actions">
-            <button className="ghost-action compact" type="button" onClick={share}>
+            <button className="ghost-action compact action-with-feedback" data-feedback="Link jest gotowy w adresie strony." type="button" onClick={share}>
               <Share2 size={18} />
               Udostępnij
             </button>
-            <button className="primary-action" type="button" onClick={exportPdf}>
+            <button className="primary-action action-with-feedback" data-feedback="Generuję PDF..." type="button" onClick={exportPdf}>
               <Download size={18} />
               Eksportuj PDF
             </button>

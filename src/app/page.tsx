@@ -69,7 +69,7 @@ export default function LandingPage() {
           <h1>Wynajem czy zakup mieszkania w Warszawie?</h1>
           <p>
             Porównaj koszty najmu, kredytu i alternatywnego inwestowania kapitału w konkretnych dzielnicach Warszawy.
-            Zobacz decyzję mieszkaniową jak model finansowy, nie jak zgadywankę.
+            Potraktuj decyzję mieszkaniową jak model finansowy, nie jak przeczucie.
           </p>
           <div className="landing-actions">
             <Link className="landing-primary" href="/kalkulator">
