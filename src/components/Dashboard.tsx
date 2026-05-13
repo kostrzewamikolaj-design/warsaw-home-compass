@@ -24,7 +24,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import mapboxgl from "mapbox-gl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -160,13 +160,26 @@ function Slider({
   hint?: string;
   onChange: (value: number) => void;
 }) {
+  const handleChange = (event: FormEvent<HTMLInputElement>) => {
+    onChange(Number(event.currentTarget.value));
+  };
+
   return (
     <label className="control">
       <span>
         {label}
         <strong>{format(value)}</strong>
       </span>
-      <input type="range" value={value} min={min} max={max} step={step} onChange={(event) => onChange(Number(event.target.value))} />
+      <input
+        aria-label={`${label} ${format(value)}`}
+        type="range"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={handleChange}
+        onInput={handleChange}
+      />
       {hint ? <small>{hint}</small> : null}
     </label>
   );

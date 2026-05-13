@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Building2, Gauge, Layers3, LineChart, MapPinned, Radar, ShieldCheck, Sparkles, TrendingUp, WalletCards } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, FileText, Gauge, Layers3, LineChart, MapPinned, Radar, ShieldCheck, Sparkles, TrendingUp, WalletCards } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Wynajem czy zakup mieszkania w Warszawie?",
   description:
-    "Premium kalkulator rent-vs-buy dla Warszawy. Porównaj koszty najmu, kredytu i alternatywnego inwestowania kapitału w konkretnych dzielnicach."
+    "Porównaj wynajem i zakup mieszkania w warszawskich dzielnicach. Sprawdź orientacyjny moment opłacalności, koszty kredytu i alternatywę inwestowania kapitału.",
+  openGraph: {
+    title: "Wynajem czy zakup mieszkania w Warszawie?",
+    description:
+      "Porównaj wynajem i zakup mieszkania w warszawskich dzielnicach. Sprawdź orientacyjny moment opłacalności, koszty kredytu i alternatywę inwestowania kapitału.",
+    type: "website",
+    locale: "pl_PL"
+  }
 };
 
 const modelItems = [
@@ -19,6 +26,34 @@ const modelItems = [
   { icon: TrendingUp, label: "Wzrost najmu" },
   { icon: LineChart, label: "Zwrot z inwestycji" },
   { icon: Radar, label: "Symulacja Monte Carlo" }
+];
+
+const outcomeItems = [
+  {
+    icon: Gauge,
+    title: "Moment opłacalności zakupu",
+    copy: "Sprawdź orientacyjnie, po ilu latach zakup zaczyna wygrywać z najmem w przyjętych założeniach."
+  },
+  {
+    icon: WalletCards,
+    title: "Różnica majątku względem najmu",
+    copy: "Porównaj kapitał w mieszkaniu z wynikiem scenariusza, w którym wynajmujesz i inwestujesz różnicę."
+  },
+  {
+    icon: MapPinned,
+    title: "Porównanie dzielnic Warszawy",
+    copy: "Zestaw ze sobą lokalizacje o różnych cenach, czynszach najmu i potencjale wzrostu wartości."
+  },
+  {
+    icon: Radar,
+    title: "Zakres scenariuszy Monte Carlo",
+    copy: "Zobacz nie tylko jedną ścieżkę, ale także rozpiętość możliwych wyników przy zmiennych założeniach."
+  },
+  {
+    icon: FileText,
+    title: "Eksport analizy do PDF",
+    copy: "Zapisz aktualny scenariusz jako czytelne podsumowanie do rozmowy z partnerem, doradcą lub bankiem."
+  }
 ];
 
 const steps = [
@@ -36,6 +71,27 @@ const steps = [
     eyebrow: "03",
     title: "Sprawdź scenariusze",
     copy: "Zobacz moment opłacalności, rozkład wyników i porównanie dzielnic w jednym czytelnym widoku."
+  }
+];
+
+const methodologyPoints = [
+  "Model porównuje zakup mieszkania z kredytem z alternatywą wynajmu i inwestowania różnicy w miesięcznych kosztach.",
+  "Uwzględnia m.in. dzielnicę, metraż, oprocentowanie kredytu, wkład własny, koszty utrzymania, wzrost najmu, wzrost wartości mieszkania i zwrot z inwestycji.",
+  "Wynik pokazuje edukacyjny scenariusz decyzyjny. Nie jest rekomendacją zakupu, najmu, inwestycji ani wyboru kredytu."
+];
+
+const trustItems = [
+  {
+    title: "Dane szacunkowe, nie ogłoszenia na żywo",
+    copy: "Ceny i czynsze są lokalnym, statycznym modelem referencyjnym. Przed decyzją trzeba sprawdzić aktualne oferty i warunki finansowania."
+  },
+  {
+    title: "Transparentny model edukacyjny",
+    copy: "Założenia są widoczne i możliwe do zmiany, dzięki czemu możesz sprawdzić, które czynniki najmocniej wpływają na wynik."
+  },
+  {
+    title: "Wynik nie zastępuje doradcy",
+    copy: "To narzędzie do uporządkowania myślenia, a nie porada finansowa, kredytowa, prawna ani inwestycyjna."
   }
 ];
 
@@ -64,12 +120,12 @@ export default function LandingPage() {
         <div className="landing-hero-copy">
           <span className="landing-kicker">
             <Sparkles size={16} />
-            Publiczne MVP dla warszawskiego rynku mieszkań
+            Interaktywny model decyzyjny dla Warszawy
           </span>
           <h1>Wynajem czy zakup mieszkania w Warszawie?</h1>
           <p>
-            Porównaj koszty najmu, kredytu i alternatywnego inwestowania kapitału w konkretnych dzielnicach Warszawy.
-            Potraktuj decyzję mieszkaniową jak model finansowy, nie jak przeczucie.
+            Sprawdź orientacyjny moment opłacalności zakupu, różnicę majątku względem najmu oraz wpływ kredytu, czynszu,
+            wzrostu cen i inwestowania kapitału w konkretnych dzielnicach Warszawy.
           </p>
           <div className="landing-actions">
             <Link className="landing-primary" href="/kalkulator">
@@ -77,17 +133,21 @@ export default function LandingPage() {
               <ArrowRight size={18} />
             </Link>
             <a className="landing-secondary" href="#model">
-              Zobacz jak działa model
+              Zobacz, jak działa model
             </a>
           </div>
+          <p className="cta-note">
+            Bez zakładania konta. Dane są szacunkowe. Wynik traktuj jako punkt wyjścia do decyzji.
+          </p>
           <div className="hero-proof">
-            <span>18 dzielnic</span>
+            <span>18 dzielnic Warszawy</span>
             <span>500+ ścieżek Monte Carlo</span>
             <span>Szacunkowe dane lokalne</span>
           </div>
         </div>
 
         <div className="hero-product" aria-label="Podgląd dashboardu kalkulatora">
+          <span className="preview-context">Przykładowy podgląd analizy</span>
           <div className="hero-product-top">
             <div>
               <span>Wybrana dzielnica</span>
@@ -130,6 +190,31 @@ export default function LandingPage() {
               <path d="M8 104 C98 84 154 106 219 83 C286 59 332 88 398 62 C446 43 482 38 512 31" />
             </svg>
           </div>
+        </div>
+      </section>
+
+      <section className="landing-band outcome-band" id="efekt">
+        <div className="section-heading">
+          <span>Co zobaczysz w kalkulatorze?</span>
+          <h2>Konkretny obraz decyzji, zanim wejdziesz w arkusz, ofertę kredytu albo negocjacje.</h2>
+          <p>
+            Kalkulator porządkuje kilka zmiennych naraz: lokalizację, metraż, kredyt, czynsz najmu, koszty utrzymania i
+            alternatywę inwestowania kapitału.
+          </p>
+        </div>
+        <div className="outcome-grid">
+          {outcomeItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article className="outcome-card" key={item.title}>
+                <span className="outcome-icon">
+                  <Icon size={20} />
+                </span>
+                <h3>{item.title}</h3>
+                <p>{item.copy}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -196,20 +281,45 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="zaufanie" className="trust-section">
-        <div>
-          <span>Edukacyjne MVP</span>
-          <h2>Model ma pomagać myśleć, nie podejmować decyzję za Ciebie.</h2>
+      <section className="landing-band methodology-section" id="metodologia">
+        <div className="section-heading compact">
+          <span>Metodologia w skrócie</span>
+          <h2>Model porównuje dwa sposoby użycia tych samych pieniędzy.</h2>
+          <p>
+            Zamiast pytać tylko, czy rata jest wyższa od czynszu, pokazujemy szerszy obraz: przepływy miesięczne, kapitał
+            uwięziony we wkładzie własnym, koszty utrzymania i możliwy wynik alternatywnej inwestycji.
+          </p>
         </div>
-        <p>
-          Dane w aplikacji są statyczne i szacunkowe. Narzędzie nie stanowi porady finansowej, kredytowej, prawnej ani
-          inwestycyjnej. Przed decyzją zweryfikuj założenia samodzielnie i skonsultuj je z odpowiednimi specjalistami.
-        </p>
+        <div className="methodology-card">
+          {methodologyPoints.map((point, index) => (
+            <div className="methodology-point" key={point}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <p>{point}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="zaufanie" className="trust-section">
+        <div className="trust-copy">
+          <span>Edukacyjne MVP</span>
+          <h2>Przejrzysty model zamiast obietnicy.</h2>
+        </div>
+        <div className="trust-grid">
+          {trustItems.map((item) => (
+            <article className="trust-card" key={item.title}>
+              <ShieldCheck size={20} />
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="final-cta">
         <span>Gotowy na pierwszy test?</span>
         <h2>Sprawdź swoją dzielnicę.</h2>
+        <p>Wybierz lokalizację, ustaw własne założenia i zobacz, jak zmienia się wynik.</p>
         <Link className="landing-primary" href="/kalkulator">
           Sprawdź swoją dzielnicę
           <ArrowRight size={18} />

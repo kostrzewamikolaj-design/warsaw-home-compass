@@ -35,7 +35,7 @@ The district appreciation bands are grouped as:
 - Emerging: Białołęka, Targówek, Ursus
 - Outer value: remaining districts in the MVP dataset
 
-The visible "Home appreciation baseline" slider is blended with the selected district's appreciation band. This prevents one global slider from fully overriding local district assumptions, while still letting users test optimistic and conservative views.
+The visible "Bazowy wzrost wartości mieszkania" / home appreciation baseline slider is blended with the selected district's appreciation band. This prevents one global slider from fully overriding local district assumptions, while still letting users test optimistic and conservative views.
 
 ## Monte Carlo Simulation
 
