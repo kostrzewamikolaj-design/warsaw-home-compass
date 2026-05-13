@@ -45,6 +45,10 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 .dashboard {
   min-height: 100vh;
 }
@@ -113,6 +117,10 @@ button {
 .nav-item.active {
   background: linear-gradient(180deg, rgba(49, 87, 255, 0.12), rgba(49, 87, 255, 0.04));
   color: var(--blue);
+}
+
+.nav-item:disabled {
+  opacity: 0.52;
 }
 
 .locale {
@@ -213,8 +221,22 @@ button {
   font-weight: 760;
 }
 
+.ghost-action:disabled {
+  background: rgba(255, 255, 255, 0.62);
+  color: #7a85aa;
+}
+
 .ghost-action.compact {
   color: var(--ink);
+}
+
+.soon-pill {
+  background: rgba(49, 87, 255, 0.1);
+  border-radius: 999px;
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  padding: 3px 7px;
 }
 
 .primary-action {
@@ -769,6 +791,12 @@ button {
 
 .control strong {
   color: var(--ink);
+}
+
+.control small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 
 input[type="range"] {

@@ -41,7 +41,7 @@ import {
   YAxis
 } from "recharts";
 import type { FeatureCollection } from "geojson";
-import { dataSourceNote, districtById, districtByName, districts, type DistrictMarket } from "@/lib/districts";
+import { dataLastUpdated, dataSourceNote, districtById, districtByName, districts, type DistrictMarket } from "@/lib/districts";
 import {
   defaultSettings,
   money,
@@ -126,6 +126,7 @@ function Slider({
   max,
   step,
   format,
+  hint,
   onChange
 }: {
   label: string;
@@ -134,6 +135,7 @@ function Slider({
   max: number;
   step: number;
   format: (value: number) => string;
+  hint?: string;
   onChange: (value: number) => void;
 }) {
   return (
@@ -143,6 +145,7 @@ function Slider({
         <strong>{format(value)}</strong>
       </span>
       <input type="range" value={value} min={min} max={max} step={step} onChange={(event) => onChange(Number(event.target.value))} />
+      {hint ? <small>{hint}</small> : null}
     </label>
   );
 }
@@ -164,9 +167,24 @@ function Toggle({
   );
 }
 
-function NavItem({ icon, label, active = false }: { icon: React.ReactNode; label: string; active?: boolean }) {
+function NavItem({
+  icon,
+  label,
+  active = false,
+  disabled = false
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+}) {
   return (
-    <button className={`nav-item ${active ? "active" : ""}`} type="button">
+    <button
+      className={`nav-item ${active ? "active" : ""}`}
+      disabled={disabled}
+      title={disabled ? "Coming soon in the public MVP roadmap" : undefined}
+      type="button"
+    >
       {icon}
       <span>{label}</span>
     </button>
@@ -405,6 +423,7 @@ export default function HomePage() {
   }, [enrichedGeojson]);
 
   const activeShape = districtShapes.find((shape) => shape.id === (hoveredId ?? selectedId));
+  const appreciationHint = `${selected.band} band guide: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} p.a. The slider is a global assumption blended with the district band.`;
   const comparisonData = [
     {
       name: selected.name,
@@ -433,10 +452,10 @@ export default function HomePage() {
         <nav>
           <NavItem icon={<Grid2X2 size={22} />} label="Overview" />
           <NavItem icon={<BarChart3 size={22} />} label="Compare" active />
-          <NavItem icon={<Heart size={22} />} label="Saved" />
-          <NavItem icon={<Bell size={22} />} label="Alerts" />
-          <NavItem icon={<FileText size={22} />} label="Reports" />
-          <NavItem icon={<BookOpen size={22} />} label="Learn" />
+          <NavItem icon={<Heart size={22} />} label="Saved" disabled />
+          <NavItem icon={<Bell size={22} />} label="Alerts" disabled />
+          <NavItem icon={<FileText size={22} />} label="Reports" disabled />
+          <NavItem icon={<BookOpen size={22} />} label="Learn" disabled />
         </nav>
         <button className="locale" type="button">
           PL
@@ -449,7 +468,7 @@ export default function HomePage() {
             <div className="brand-mark small">W</div>
             <div>
               <h1>Warsaw Rent vs Buy</h1>
-              <p>Make the smarter move.</p>
+              <p>Estimated district model · updated {dataLastUpdated}</p>
             </div>
           </div>
           <label className="scenario-select">
@@ -606,9 +625,10 @@ export default function HomePage() {
                 <p>Side-by-side rent vs buy analysis for selected Warsaw districts.</p>
               </div>
               <div>
-                <button className="ghost-action compact" type="button">
+                <button className="ghost-action compact" disabled title="Scenario comparison is planned after the public MVP" type="button">
                   <Sparkles size={18} />
                   Compare scenarios
+                  <span className="soon-pill">Soon</span>
                 </button>
                 <button className="primary-action" type="button" onClick={exportPdf}>
                   <FileText size={18} />
@@ -639,7 +659,7 @@ export default function HomePage() {
                 <i className={isRunning ? "pulse" : ""}>{isRunning ? "Simulating" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% buy-win odds`}</i>
               </div>
               <div className="assumption-card">
-                <span>Preloaded market data</span>
+                <span>Estimated market data</span>
                 <strong>{selected.name}</strong>
                 <p>{selected.note}</p>
                 <div>
@@ -730,7 +750,16 @@ export default function HomePage() {
                   <Slider label="Apartment size" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
                   <Slider label="Mortgage rate" value={settings.mortgageRate} min={0.025} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("mortgageRate", value)} />
                   <Slider label="Down payment" value={settings.downPayment} min={0.1} max={0.6} step={0.01} format={percent} onChange={(value) => updateSetting("downPayment", value)} />
-                  <Slider label="Home appreciation" value={settings.homeAppreciation} min={-0.01} max={0.09} step={0.001} format={percent} onChange={(value) => updateSetting("homeAppreciation", value)} />
+                  <Slider
+                    label="Home appreciation baseline"
+                    value={settings.homeAppreciation}
+                    min={-0.01}
+                    max={0.09}
+                    step={0.001}
+                    format={percent}
+                    hint={appreciationHint}
+                    onChange={(value) => updateSetting("homeAppreciation", value)}
+                  />
                   <Slider label="Rent growth" value={settings.rentGrowth} min={0} max={0.1} step={0.001} format={percent} onChange={(value) => updateSetting("rentGrowth", value)} />
                   <Slider label="Investment return" value={settings.investmentReturn} min={0.005} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("investmentReturn", value)} />
                   <Slider label="Inflation" value={settings.inflation} min={0.005} max={0.085} step={0.001} format={percent} onChange={(value) => updateSetting("inflation", value)} />

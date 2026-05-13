@@ -75,5 +75,7 @@ export const districts: DistrictMarket[] = rows.map(([name, pricePerM2, rentPerM
 export const districtByName = new Map(districts.map((district) => [district.name, district]));
 export const districtById = new Map(districts.map((district) => [district.id, district]));
 
+export const dataLastUpdated = "May 2026";
+
 export const dataSourceNote =
-  "Purchase medians use current RCN-style district medians surfaced by CenaCheck, verified April 16, 2026. Rent/m2 assumptions are calibrated from 2026 Warsaw rent benchmarks and district differentials; all assumptions remain editable.";
+  "Estimated MVP dataset last updated May 2026. Purchase and rent inputs are local static assumptions calibrated from public Warsaw market benchmarks and district differentials; they are not live listings or official valuations.";
