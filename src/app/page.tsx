@@ -99,7 +99,7 @@ const polygonPath = (coordinates: number[][][]) =>
     )
     .join(" ");
 
-const formatYear = (value: number | null) => (value === null ? "brak progu" : `${number.format(value)} lat`);
+const formatYear = (value: number | null) => (value === null ? "Brak momentu opłacalności" : `${number.format(value)} lat`);
 
 const bandLabels = {
   Premium: "premium",
@@ -478,11 +478,11 @@ export default function HomePage() {
           <NavItem icon={<Heart size={22} />} label="Zapisane" disabled />
           <NavItem icon={<Bell size={22} />} label="Alerty" disabled />
           <NavItem icon={<FileText size={22} />} label="Raporty" disabled />
-          <NavItem icon={<BookOpen size={22} />} label="Nauka" disabled />
+          <NavItem icon={<BookOpen size={22} />} label="Wiedza" disabled />
         </nav>
-        <button className="locale" type="button">
+        <span className="locale" aria-label="Język interfejsu: polski">
           PL
-        </button>
+        </span>
       </aside>
 
       <section className="workspace">
@@ -490,7 +490,7 @@ export default function HomePage() {
           <div className="product-title">
             <div className="brand-mark small">W</div>
             <div>
-              <h1>Warszawa: najem czy zakup</h1>
+              <h1>Warszawa: wynajem czy zakup</h1>
               <p>Szacunkowy model dzielnicowy · aktualizacja: {dataLastUpdated}</p>
             </div>
           </div>
@@ -785,12 +785,12 @@ export default function HomePage() {
                   <h3>Założenia modelu</h3>
                 </div>
                 <div className="controls compact-controls">
-                  <Slider label="Lata w mieszkaniu" value={settings.yearsInHome} min={1} max={30} step={1} format={(value) => `${value} lat`} onChange={(value) => updateSetting("yearsInHome", value)} />
-                  <Slider label="Metraż mieszkania" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
+                  <Slider label="Planowany czas mieszkania" value={settings.yearsInHome} min={1} max={30} step={1} format={(value) => `${value} lat`} onChange={(value) => updateSetting("yearsInHome", value)} />
+                  <Slider label="Powierzchnia mieszkania" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
                   <Slider label="Oprocentowanie kredytu" value={settings.mortgageRate} min={0.025} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("mortgageRate", value)} />
                   <Slider label="Wkład własny" value={settings.downPayment} min={0.1} max={0.6} step={0.01} format={percent} onChange={(value) => updateSetting("downPayment", value)} />
                   <Slider
-                    label="Bazowy wzrost wartości"
+                    label="Bazowy wzrost wartości mieszkania"
                     value={settings.homeAppreciation}
                     min={-0.01}
                     max={0.09}

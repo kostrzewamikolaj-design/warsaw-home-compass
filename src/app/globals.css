@@ -124,12 +124,15 @@ button:disabled {
 }
 
 .locale {
+  align-items: center;
   background: #eef2ff;
   border: 0;
   border-radius: 14px;
   color: var(--ink);
+  display: inline-flex;
   font-weight: 800;
   height: 48px;
+  justify-content: center;
   margin-top: auto;
   width: 48px;
 }

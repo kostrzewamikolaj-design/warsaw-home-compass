@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Warszawa: najem czy zakup",
+  title: "Warszawa: wynajem czy zakup",
   description: "Interaktywny kalkulator najmu i zakupu mieszkania w warszawskich dzielnicach"
 };
 
