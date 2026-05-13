@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-05-13 - Responsive + runtime hardening pass
+
+Branch: `landing-page-mvp`  
+Pull request: #2, `Add premium Polish landing page`
+
+### Summary
+
+- Improved typography resilience (line-height, wrapping, balanced headings) to reduce awkward Polish line breaks and text crowding.
+- Hardened responsive behavior on landing and calculator layouts for desktop, tablet and small mobile widths.
+- Reduced dashboard runtime load by removing duplicate slider event triggering, debouncing simulation updates and reducing chart rendering pressure.
+- Added a local `favicon.ico` to remove runtime 404 console noise.
+
+### Performance Notes
+
+- Simulation dispatch is now debounced by 150ms after settings changes.
+- Slider updates no longer double-trigger both `onInput` and `onChange`.
+- Monte Carlo worker path count changed from 650 to 560 (summary stats preserved).
+- Rendered spaghetti lines were reduced (56 generated, 36 displayed) and chart animations were disabled for heavy series.
+- PDF capture scale was lowered from 1.6 to 1.35 to reduce export workload.
+
+### Verification
+
+- `npm run typecheck` - passed.
+- `npm run build` - passed.
+- `npm run dev` - runtime QA executed on `/` and `/kalkulator`.
+
+### Runtime QA Snapshot
+
+- Checked viewports: 1440, 1280, 1024, 768, 430 and 390.
+- No horizontal page overflow detected on checked routes.
+- Console and page errors were clean on checked routes after fixes.
+- Flow checks included landing CTA to calculator, district comparison selection (Wola and Żoliborz), slider updates and share hash behavior.
+- PDF export button path was exercised in headless QA; full browser save UX remains browser-dependent.
+
 ## 2026-05-13 - Landing page MVP polish
 
 Branch: `landing-page-mvp`  

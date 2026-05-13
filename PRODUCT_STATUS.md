@@ -22,6 +22,7 @@ Current branch / PR context:
 ## Completed Features
 
 - Polish landing page with hero, product preview, problem framing, model overview, methodology summary, trust section and final CTA.
+- Responsive layout hardening on `/` and `/kalkulator` for laptop/tablet/mobile MVP usability.
 - Calculator dashboard moved to `/kalkulator`.
 - Warsaw district selection and comparison.
 - Static estimated Warsaw district market data.
@@ -32,6 +33,7 @@ Current branch / PR context:
 - Browser-side PDF export.
 - Polish interface copy and visible MVP disclaimer.
 - Duplicate React key warnings in district map rendering fixed.
+- Runtime hardening: debounced simulation updates, lighter chart rendering and reduced duplicate slider-trigger pressure.
 - Documentation foundation in `README.md`, `METHODOLOGY.md`, `PRODUCT_STATUS.md` and `CHANGELOG.md`.
 
 ## Known Limitations
@@ -42,6 +44,7 @@ Current branch / PR context:
 - The simulation is an educational scenario model, not a prediction.
 - PDF export is browser-based and not a polished reporting workflow.
 - Saved scenarios, alerts, reports and learning areas are not production features yet.
+- Mobile calculator remains a compressed MVP view; fully polished mobile analytics UX is still pending.
 
 ## Intentionally Not Included Yet
 
@@ -63,8 +66,9 @@ Latest local QA pass on 2026-05-13:
 - `npm run typecheck` passed.
 - `npm run build` passed.
 - Runtime QA checked `/` and `/kalkulator`.
-- Browser console was clean for React duplicate key warnings, hydration warnings and runtime errors during the checked flows.
-- Share URL hash and PDF export paths were exercised locally.
+- Viewports checked: 1440, 1280, 1024, 768, 430, 390.
+- Browser console was clean for React warnings/hydration/runtime errors on checked flows after the hardening pass.
+- Share URL hash was exercised locally; PDF button path was exercised, while final browser save UX remains browser-dependent.
 
 ## Recommended Next Steps
 

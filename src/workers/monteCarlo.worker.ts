@@ -160,7 +160,7 @@ const simulateDistrict = (
         if (breakEven === null && delta >= 0) {
           breakEven = year;
         }
-        if (path < 90) pathPoints.push({ year, value: Math.round(delta) });
+        if (path < 56) pathPoints.push({ year, value: Math.round(delta) });
         if (month === horizonMonth) {
           horizonDiffs.push(delta);
           if (delta >= 0) wins += 1;
@@ -169,7 +169,7 @@ const simulateDistrict = (
     }
 
     if (breakEven !== null) breakEvens.push(breakEven);
-    if (path < 90) spaghetti.push(pathPoints);
+    if (path < 56) spaghetti.push(pathPoints);
   }
 
   const yearly = allYearlyDiffs.slice(1).map((values, index) => ({

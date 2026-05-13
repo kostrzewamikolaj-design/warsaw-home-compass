@@ -24,7 +24,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import mapboxgl from "mapbox-gl";
-import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -122,6 +122,8 @@ const bandLabels = {
 
 const mvpDisclaimer =
   "To edukacyjne MVP oparte na statycznych, szacunkowych danych. Nie stanowi porady finansowej, kredytowej, prawnej ani inwestycyjnej. Zweryfikuj założenia samodzielnie przed podjęciem decyzji.";
+const simulationPathCount = 560;
+const chartPreviewPathCount = 36;
 
 const hashState = (districtId: string, compareId: string | null, settings: Settings) => {
   const payload = JSON.stringify({ districtId, compareId, settings });
@@ -160,7 +162,7 @@ function Slider({
   hint?: string;
   onChange: (value: number) => void;
 }) {
-  const handleChange = (event: FormEvent<HTMLInputElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(Number(event.currentTarget.value));
   };
 
@@ -178,7 +180,6 @@ function Slider({
         max={max}
         step={step}
         onChange={handleChange}
-        onInput={handleChange}
       />
       {hint ? <small>{hint}</small> : null}
     </label>
@@ -288,6 +289,7 @@ export default function Dashboard() {
   const [selectedId, setSelectedId] = useState("mokotow");
   const [compareId, setCompareId] = useState<string | null>("wola");
   const [settings, setSettings] = useState<Settings>({ ...defaultSettings });
+  const [simSettings, setSimSettings] = useState<Settings>({ ...defaultSettings });
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(true);
@@ -304,6 +306,11 @@ export default function Dashboard() {
   const selected = districtById.get(selectedId) ?? districts[0];
   const compare = compareId ? districtById.get(compareId) ?? null : null;
   const selectedDistricts = [selected, compare].filter(Boolean) as DistrictMarket[];
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSimSettings(settings), 150);
+    return () => window.clearTimeout(timer);
+  }, [settings]);
 
   useEffect(() => {
     const restored = parseHash();
@@ -344,10 +351,10 @@ export default function Dashboard() {
     workerRef.current.postMessage({
       district: selected,
       compareDistrict: compare,
-      settings,
-      paths: 650
+      settings: simSettings,
+      paths: simulationPathCount
     });
-  }, [compare, selected, settings]);
+  }, [compare, selected, simSettings]);
 
   useEffect(() => {
     workerRef.current = new Worker(new URL("../workers/monteCarlo.worker.ts", import.meta.url), { type: "module" });
@@ -370,7 +377,7 @@ export default function Dashboard() {
   }, [runSimulation]);
 
   useEffect(() => {
-    if (!mapboxToken || !mapContainer.current || mapRef.current || !enrichedGeojson) return;
+    if (!mapboxToken || !mapContainer.current || mapRef.current || !enrichedGeojson || window.innerWidth < 960) return;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: cartoPositron,
@@ -463,7 +470,7 @@ export default function Dashboard() {
     flashActionMessage("Generuję PDF...", 12000);
     try {
       await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-      const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.6 });
+      const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.35 });
       const image = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
       pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
@@ -474,7 +481,10 @@ export default function Dashboard() {
     }
   };
 
-  const filteredDistricts = districts.filter((district) => district.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredDistricts = useMemo(
+    () => districts.filter((district) => district.name.toLowerCase().includes(query.toLowerCase())),
+    [query]
+  );
   const chartData = result?.yearly.map((point) => ({
     ...point,
     floor95: point.p05,
@@ -518,26 +528,30 @@ export default function Dashboard() {
 
   const activeShape = districtShapes.find((shape) => shape.districtId === (hoveredId ?? selectedId));
   const appreciationHint = `Zakres dla segmentu ${bandLabels[selected.band]}: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak jest bazowym założeniem, które model łączy z profilem dzielnicy.`;
-  const comparisonData = [
-    {
-      name: selected.name,
-      price: selected.pricePerM2,
-      rent: selected.rentPerM2,
-      ratio: Math.round((selected.rentPerM2 / selected.pricePerM2) * 10000) / 100,
-      breakEven: result?.summary.breakEvenMedian ?? 0
-    },
-    ...(compare
-      ? [
-          {
-            name: compare.name,
-            price: compare.pricePerM2,
-            rent: compare.rentPerM2,
-            ratio: Math.round((compare.rentPerM2 / compare.pricePerM2) * 10000) / 100,
-            breakEven: result?.compareSummary?.breakEvenMedian ?? 0
-          }
-        ]
-      : [])
-  ];
+  const comparisonData = useMemo(
+    () => [
+      {
+        name: selected.name,
+        price: selected.pricePerM2,
+        rent: selected.rentPerM2,
+        ratio: Math.round((selected.rentPerM2 / selected.pricePerM2) * 10000) / 100,
+        breakEven: result?.summary.breakEvenMedian ?? 0
+      },
+      ...(compare
+        ? [
+            {
+              name: compare.name,
+              price: compare.pricePerM2,
+              rent: compare.rentPerM2,
+              ratio: Math.round((compare.rentPerM2 / compare.pricePerM2) * 10000) / 100,
+              breakEven: result?.compareSummary?.breakEvenMedian ?? 0
+            }
+          ]
+        : [])
+    ],
+    [compare, result?.compareSummary?.breakEvenMedian, result?.summary.breakEvenMedian, selected.name, selected.pricePerM2, selected.rentPerM2]
+  );
+  const chartPreviewPaths = result?.paths.slice(0, chartPreviewPathCount) ?? [];
 
   return (
     <main ref={reportRef} className="dashboard app-dashboard">
@@ -792,9 +806,9 @@ export default function Dashboard() {
                     <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} width={48} />
                     <Tooltip formatter={(value) => money.format(Number(value))} labelFormatter={(label) => `Rok ${label}`} />
                     <ReferenceLine y={0} stroke="#1a2b68" strokeDasharray="4 4" />
-                    {result?.paths.map((path, index) => (
+                    {chartPreviewPaths.map((path, index) => (
                       <Line
-                        key={index}
+                        key={`${index}-${path[0]?.year ?? 0}`}
                         data={path}
                         type="monotone"
                         dataKey="value"
@@ -802,7 +816,7 @@ export default function Dashboard() {
                         stroke={index % 3 === 0 ? "#3157ff" : "#8d54ff"}
                         strokeOpacity={0.11}
                         strokeWidth={1}
-                        isAnimationActive
+                        isAnimationActive={false}
                       />
                     ))}
                   </LineChart>
@@ -819,11 +833,11 @@ export default function Dashboard() {
                     <XAxis dataKey="year" tickLine={false} axisLine={false} />
                     <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} width={48} />
                     <Tooltip formatter={(value) => money.format(Number(value))} />
-                    <Area dataKey="floor95" stackId="95" stroke="none" fill="transparent" isAnimationActive />
-                    <Area dataKey="band95" stackId="95" stroke="none" fill="#9ab5ff" fillOpacity={0.28} isAnimationActive />
-                    <Area dataKey="floor50" stackId="50" stroke="none" fill="transparent" isAnimationActive />
-                    <Area dataKey="band50" stackId="50" stroke="none" fill="#7b4dff" fillOpacity={0.28} isAnimationActive />
-                    <Line type="monotone" dataKey="p50" stroke="#3157ff" dot={false} strokeWidth={2.4} />
+                    <Area dataKey="floor95" stackId="95" stroke="none" fill="transparent" isAnimationActive={false} />
+                    <Area dataKey="band95" stackId="95" stroke="none" fill="#9ab5ff" fillOpacity={0.28} isAnimationActive={false} />
+                    <Area dataKey="floor50" stackId="50" stroke="none" fill="transparent" isAnimationActive={false} />
+                    <Area dataKey="band50" stackId="50" stroke="none" fill="#7b4dff" fillOpacity={0.28} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="p50" stroke="#3157ff" dot={false} strokeWidth={2.4} isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </section>
