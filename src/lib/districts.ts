@@ -32,24 +32,24 @@ const ranges: Record<AppreciationBand, [number, number]> = {
 };
 
 const rows: Array<[string, number, number, string]> = [
-  ["Śródmieście", 14774, 112, "highest liquidity and central scarcity"],
-  ["Mokotów", 11163, 88, "large, liquid market with metro and office demand pockets"],
-  ["Wilanów", 9692, 82, "family-oriented stock with modern buildings"],
-  ["Ursynów", 9869, 78, "metro-led residential stability"],
-  ["Żoliborz", 11347, 95, "limited supply and premium resale depth"],
-  ["Bielany", 9856, 74, "balanced north-west value with metro access"],
-  ["Bemowo", 9198, 72, "metro extension and new-build growth corridor"],
-  ["Wola", 10561, 100, "business-district rental pull and high liquidity"],
-  ["Ochota", 11139, 86, "central residential district with tight supply"],
-  ["Praga-Północ", 11270, 82, "central east-bank renewal with higher dispersion"],
-  ["Praga-Południe", 9776, 80, "broad demand from Saska Kępa to Gocław"],
-  ["Targówek", 8183, 70, "metro-connected affordability"],
-  ["Białołęka", 7776, 66, "lower entry prices and large new supply"],
-  ["Wawer", 8172, 69, "suburban green stock with transport dispersion"],
-  ["Wesoła", 7373, 62, "low-density outer district"],
-  ["Rembertów", 7633, 63, "affordable eastern district with smaller market depth"],
-  ["Ursus", 9432, 68, "rail-linked affordability and new family stock"],
-  ["Włochy", 10500, 76, "airport/business access with mixed stock"]
+  ["Śródmieście", 14774, 112, "najwyższa płynność i ograniczona podaż w centrum"],
+  ["Mokotów", 11163, 88, "duży, płynny rynek z metrem i popytem biurowym w wybranych rejonach"],
+  ["Wilanów", 9692, 82, "rodzinny profil dzielnicy i dużo nowszej zabudowy"],
+  ["Ursynów", 9869, 78, "stabilny rynek mieszkaniowy wspierany przez metro"],
+  ["Żoliborz", 11347, 95, "ograniczona podaż i mocny segment premium na rynku wtórnym"],
+  ["Bielany", 9856, 74, "zrównoważona wartość północno-zachodniej Warszawy z dostępem do metra"],
+  ["Bemowo", 9198, 72, "korytarz wzrostu wspierany przez metro i nową zabudowę"],
+  ["Wola", 10561, 100, "silny popyt najemców przy centrum biznesowym i wysoka płynność"],
+  ["Ochota", 11139, 86, "centralna dzielnica mieszkaniowa z ograniczoną podażą"],
+  ["Praga-Północ", 11270, 82, "rewitalizujący się centralny rynek po prawej stronie Wisły"],
+  ["Praga-Południe", 9776, 80, "szeroki popyt od Saskiej Kępy po Gocław"],
+  ["Targówek", 8183, 70, "relatywna dostępność cenowa połączona z metrem"],
+  ["Białołęka", 7776, 66, "niższy próg wejścia i duża podaż nowych mieszkań"],
+  ["Wawer", 8172, 69, "zielony, podmiejski charakter z większym zróżnicowaniem transportu"],
+  ["Wesoła", 7373, 62, "zewnętrzna, mniej gęsta dzielnica mieszkaniowa"],
+  ["Rembertów", 7633, 63, "dostępniejszy cenowo rynek wschodni o mniejszej płynności"],
+  ["Ursus", 9432, 68, "kolej, dostępność cenowa i nowa zabudowa rodzinna"],
+  ["Włochy", 10500, 76, "dostęp do lotniska i biznesu oraz mieszany zasób mieszkaniowy"]
 ];
 
 export const districts: DistrictMarket[] = rows.map(([name, pricePerM2, rentPerM2, note]) => {
@@ -75,7 +75,7 @@ export const districts: DistrictMarket[] = rows.map(([name, pricePerM2, rentPerM
 export const districtByName = new Map(districts.map((district) => [district.name, district]));
 export const districtById = new Map(districts.map((district) => [district.id, district]));
 
-export const dataLastUpdated = "May 2026";
+export const dataLastUpdated = "maj 2026";
 
 export const dataSourceNote =
-  "Estimated MVP dataset last updated May 2026. Purchase and rent inputs are local static assumptions calibrated from public Warsaw market benchmarks and district differentials; they are not live listings or official valuations.";
+  "Szacunkowy zestaw danych MVP, ostatnia aktualizacja: maj 2026. Ceny zakupu i najmu są statycznymi założeniami lokalnymi skalibrowanymi na podstawie publicznych benchmarków warszawskiego rynku i różnic między dzielnicami; nie są aktywnymi ogłoszeniami ani oficjalną wyceną.";

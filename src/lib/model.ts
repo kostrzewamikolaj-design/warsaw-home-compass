@@ -68,22 +68,22 @@ export type SimulationResult = {
 
 export const scenarios: Record<ScenarioKey, { label: string; areaM2: number; defaults: Partial<Settings> }> = {
   single: {
-    label: "Single buyer",
+    label: "Singiel / singielka",
     areaM2: 32,
     defaults: { downPayment: 0.2, yearsInHome: 7, investmentProfile: "ETF" }
   },
   couple: {
-    label: "Couple",
+    label: "Para",
     areaM2: 50,
     defaults: { downPayment: 0.2, yearsInHome: 10, investmentProfile: "ETF" }
   },
   family: {
-    label: "Family",
+    label: "Rodzina",
     areaM2: 75,
     defaults: { downPayment: 0.25, yearsInHome: 15, investmentProfile: "Bonds" }
   },
   investor: {
-    label: "Rental investor",
+    label: "Inwestor na wynajem",
     areaM2: 45,
     defaults: { downPayment: 0.35, yearsInHome: 12, mortgageType: "variable", investmentProfile: "ETF" }
   }

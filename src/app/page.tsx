@@ -99,7 +99,18 @@ const polygonPath = (coordinates: number[][][]) =>
     )
     .join(" ");
 
-const formatYear = (value: number | null) => (value === null ? "No break-even" : `${number.format(value)} years`);
+const formatYear = (value: number | null) => (value === null ? "brak progu" : `${number.format(value)} lat`);
+
+const bandLabels = {
+  Premium: "premium",
+  Stable: "stabilny",
+  Growth: "wzrostowy",
+  Emerging: "wschodzący",
+  "Outer value": "zewnętrzna wartość"
+} as const;
+
+const mvpDisclaimer =
+  "To edukacyjne MVP oparte na statycznych, szacunkowych danych. Nie stanowi porady finansowej, kredytowej, prawnej ani inwestycyjnej. Zweryfikuj założenia samodzielnie przed podjęciem decyzji.";
 
 const hashState = (districtId: string, compareId: string | null, settings: Settings) => {
   const payload = JSON.stringify({ districtId, compareId, settings });
@@ -182,7 +193,7 @@ function NavItem({
     <button
       className={`nav-item ${active ? "active" : ""}`}
       disabled={disabled}
-      title={disabled ? "Coming soon in the public MVP roadmap" : undefined}
+      title={disabled ? "Planowane po publicznym MVP" : undefined}
       type="button"
     >
       {icon}
@@ -230,20 +241,20 @@ function DistrictCard({
           <i>{index}</i>
           <div>
             <h3>{district.name}</h3>
-            <span>{district.band}</span>
+            <span>{bandLabels[district.band]}</span>
           </div>
         </div>
-        <button type="button" aria-label="More district actions">
+        <button type="button" aria-label="Więcej akcji dla dzielnicy">
           <MoreVertical size={18} />
         </button>
       </header>
       <div className="district-metrics">
-        <MetricTile label="Price / m²" value={`${number.format(district.pricePerM2)} zł`} delta="median" accent="blue" />
-        <MetricTile label="Rent / m² / mo." value={`${number.format(district.rentPerM2)} zł`} delta="asking rent" accent="teal" />
-        <MetricTile label="Rent-to-price" value={percent(ratio)} delta={`${district.band} band`} accent="violet" />
-        <MetricTile label="Break-even" value={formatYear(summary?.breakEvenMedian ?? null)} delta="median path" accent="blue" />
-        <MetricTile label="Buy-win odds" value={`${Math.round((summary?.buyWinsAtHorizon ?? 0) * 100)}%`} delta="selected horizon" accent="teal" />
-        <MetricTile label="Net delta" value={money.format(summary?.finalMedianDelta ?? 0)} delta="vs renting" accent="violet" />
+        <MetricTile label="Cena / m²" value={`${number.format(district.pricePerM2)} zł`} delta="mediana" accent="blue" />
+        <MetricTile label="Najem / m² / mies." value={`${number.format(district.rentPerM2)} zł`} delta="stawka ofertowa" accent="teal" />
+        <MetricTile label="Relacja najmu do ceny" value={percent(ratio)} delta={`segment: ${bandLabels[district.band]}`} accent="violet" />
+        <MetricTile label="Moment opłacalności" value={formatYear(summary?.breakEvenMedian ?? null)} delta="ścieżka medianowa" accent="blue" />
+        <MetricTile label="Szansa przewagi zakupu" value={`${Math.round((summary?.buyWinsAtHorizon ?? 0) * 100)}%`} delta="wybrany horyzont" accent="teal" />
+        <MetricTile label="Różnica majątku" value={money.format(summary?.finalMedianDelta ?? 0)} delta="względem najmu" accent="violet" />
       </div>
     </motion.article>
   );
@@ -261,6 +272,7 @@ export default function HomePage() {
   const [isRunning, setIsRunning] = useState(true);
   const [query, setQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState("");
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -365,6 +377,11 @@ export default function HomePage() {
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings((current) => ({ ...current, [key]: value }));
 
+  const flashActionMessage = (message: string) => {
+    setActionMessage(message);
+    window.setTimeout(() => setActionMessage(""), 3200);
+  };
+
   const applyScenario = (key: ScenarioKey) => {
     const scenario = scenarios[key];
     setSettings((current) => ({ ...current, scenario: key, areaM2: scenario.areaM2, ...scenario.defaults }));
@@ -374,7 +391,12 @@ export default function HomePage() {
     const hash = hashState(selectedId, compareId, settings);
     const url = `${window.location.origin}${window.location.pathname}#${hash}`;
     window.history.replaceState(null, "", `#${hash}`);
-    await navigator.clipboard?.writeText(url);
+    try {
+      await navigator.clipboard?.writeText(url);
+      flashActionMessage("Link do analizy został skopiowany.");
+    } catch {
+      flashActionMessage("Link zapisany w adresie strony. Możesz skopiować go z paska przeglądarki.");
+    }
   };
 
   const exportPdf = async () => {
@@ -383,7 +405,8 @@ export default function HomePage() {
     const image = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
     pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`warsaw-rent-vs-buy-${selected.id}.pdf`);
+    pdf.save(`warszawa-najem-czy-zakup-${selected.id}.pdf`);
+    flashActionMessage("PDF został wygenerowany.");
   };
 
   const filteredDistricts = districts.filter((district) => district.name.toLowerCase().includes(query.toLowerCase()));
@@ -423,7 +446,7 @@ export default function HomePage() {
   }, [enrichedGeojson]);
 
   const activeShape = districtShapes.find((shape) => shape.id === (hoveredId ?? selectedId));
-  const appreciationHint = `${selected.band} band guide: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} p.a. The slider is a global assumption blended with the district band.`;
+  const appreciationHint = `Zakres dla segmentu ${bandLabels[selected.band]}: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak jest bazowym założeniem, które model łączy z profilem dzielnicy.`;
   const comparisonData = [
     {
       name: selected.name,
@@ -450,12 +473,12 @@ export default function HomePage() {
       <aside className="sidebar">
         <div className="brand-mark">W</div>
         <nav>
-          <NavItem icon={<Grid2X2 size={22} />} label="Overview" />
-          <NavItem icon={<BarChart3 size={22} />} label="Compare" active />
-          <NavItem icon={<Heart size={22} />} label="Saved" disabled />
-          <NavItem icon={<Bell size={22} />} label="Alerts" disabled />
-          <NavItem icon={<FileText size={22} />} label="Reports" disabled />
-          <NavItem icon={<BookOpen size={22} />} label="Learn" disabled />
+          <NavItem icon={<Grid2X2 size={22} />} label="Przegląd" />
+          <NavItem icon={<BarChart3 size={22} />} label="Porównanie" active />
+          <NavItem icon={<Heart size={22} />} label="Zapisane" disabled />
+          <NavItem icon={<Bell size={22} />} label="Alerty" disabled />
+          <NavItem icon={<FileText size={22} />} label="Raporty" disabled />
+          <NavItem icon={<BookOpen size={22} />} label="Nauka" disabled />
         </nav>
         <button className="locale" type="button">
           PL
@@ -467,12 +490,12 @@ export default function HomePage() {
           <div className="product-title">
             <div className="brand-mark small">W</div>
             <div>
-              <h1>Warsaw Rent vs Buy</h1>
-              <p>Estimated district model · updated {dataLastUpdated}</p>
+              <h1>Warszawa: najem czy zakup</h1>
+              <p>Szacunkowy model dzielnicowy · aktualizacja: {dataLastUpdated}</p>
             </div>
           </div>
           <label className="scenario-select">
-            <span>Scenario</span>
+            <span>Scenariusz</span>
             <select value={settings.scenario} onChange={(event) => applyScenario(event.target.value as ScenarioKey)}>
               {(Object.entries(scenarios) as Array<[ScenarioKey, (typeof scenarios)[ScenarioKey]]>).map(([key, scenario]) => (
                 <option key={key} value={key}>
@@ -484,29 +507,43 @@ export default function HomePage() {
           </label>
           <button className="ghost-action" type="button" onClick={() => setCompareId(compareId ? null : "srodmiescie")}>
             <Plus size={18} />
-            Compare districts
+            Porównaj dzielnice
           </button>
           <div className="topbar-actions">
             <button className="ghost-action compact" type="button" onClick={share}>
               <Share2 size={18} />
-              Share
+              Udostępnij
             </button>
             <button className="primary-action" type="button" onClick={exportPdf}>
               <Download size={18} />
-              Export PDF
+              Eksportuj PDF
             </button>
             <button className="avatar" type="button">
               AC
             </button>
           </div>
+          {actionMessage ? <p className="action-feedback" role="status">{actionMessage}</p> : null}
         </header>
+
+        <section className="mvp-intro surface">
+          <div>
+            <span>Publiczne MVP</span>
+            <h2>Sprawdź, czy w wybranej dzielnicy bardziej opłaca się najem czy zakup.</h2>
+            <p>
+              Narzędzie pomaga osobom kupującym pierwsze mieszkanie, parom, rodzinom i inwestorom porównać koszty kredytu,
+              najmu oraz alternatywnego inwestowania różnicy. Zacznij od wyboru dzielnicy i scenariusza, a potem dostosuj
+              założenia do swojej sytuacji.
+            </p>
+          </div>
+          <p className="mvp-disclaimer">{mvpDisclaimer}</p>
+        </section>
 
         <section className="content-grid">
           <aside className="map-card surface">
             <header>
               <div>
-                <h2>Select districts to compare</h2>
-                <p>Choose up to 2 districts for the live model.</p>
+                <h2>Wybierz dzielnice do porównania</h2>
+                <p>Wybierz maksymalnie 2 dzielnice dla aktualnego modelu.</p>
               </div>
               <button type="button" className="icon-button" onClick={() => setCompareId(compareId ? null : "zoliborz")}>
                 <Plus size={20} />
@@ -520,7 +557,7 @@ export default function HomePage() {
                 viewBox={`0 0 ${svgBounds.width} ${svgBounds.height}`}
                 preserveAspectRatio="xMidYMid meet"
                 role="img"
-                aria-label="Warsaw district choropleth"
+                aria-label="Mapa dzielnic Warszawy według relacji najmu do ceny"
               >
                 <g>
                   {districtShapes.map((shape) => (
@@ -568,25 +605,25 @@ export default function HomePage() {
               </svg>
               {activeShape?.market ? (
                 <motion.div className="map-popover" key={activeShape.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                  <span>{activeShape.id === selectedId ? "Selected district" : "Hovering"}</span>
+                  <span>{activeShape.id === selectedId ? "Wybrana dzielnica" : "Podgląd dzielnicy"}</span>
                   <strong>{activeShape.name}</strong>
                   <small>
-                    {money.format(activeShape.market.pricePerM2)}/m² · {money.format(activeShape.market.rentPerM2)}/m² rent
+                    {money.format(activeShape.market.pricePerM2)}/m² · najem {money.format(activeShape.market.rentPerM2)}/m²
                   </small>
                 </motion.div>
               ) : null}
             </div>
 
             <div className="map-legend">
-              <span>Rent-to-price ratio</span>
+              <span>Relacja najmu do ceny</span>
               <div />
-              <small>lower</small>
-              <small>higher</small>
+              <small>niższa</small>
+              <small>wyższa</small>
             </div>
 
             <div className="district-search">
               <Search size={18} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search district" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Szukaj dzielnicy" />
             </div>
 
             <div className="district-list">
@@ -605,7 +642,7 @@ export default function HomePage() {
 
             <div className="compare-picker">
               <select value={compareId ?? ""} onChange={(event) => setCompareId(event.target.value || null)}>
-                <option value="">Add comparison district</option>
+                <option value="">Dodaj dzielnicę do porównania</option>
                 {districts
                   .filter((district) => district.id !== selectedId)
                   .map((district) => (
@@ -614,25 +651,25 @@ export default function HomePage() {
                     </option>
                   ))}
               </select>
-              <span>{selectedDistricts.length} / 2 selected</span>
+              <span>{selectedDistricts.length} / 2 wybrane</span>
             </div>
           </aside>
 
           <section className="analysis-area">
             <div className="analysis-header">
               <div>
-                <h2>Compare districts</h2>
-                <p>Side-by-side rent vs buy analysis for selected Warsaw districts.</p>
+                <h2>Porównanie dzielnic</h2>
+                <p>Analiza najmu i zakupu dla wybranych warszawskich dzielnic.</p>
               </div>
               <div>
-                <button className="ghost-action compact" disabled title="Scenario comparison is planned after the public MVP" type="button">
+                <button className="ghost-action compact" disabled title="Porównanie scenariuszy jest planowane po publicznym MVP" type="button">
                   <Sparkles size={18} />
-                  Compare scenarios
-                  <span className="soon-pill">Soon</span>
+                  Porównaj scenariusze
+                  <span className="soon-pill">Wkrótce</span>
                 </button>
                 <button className="primary-action" type="button" onClick={exportPdf}>
                   <FileText size={18} />
-                  Full comparison report
+                  Pełny raport porównania
                 </button>
               </div>
             </div>
@@ -643,28 +680,30 @@ export default function HomePage() {
               {!compare ? (
                 <article className="district-card empty">
                   <Plus size={28} />
-                  <h3>Add another district</h3>
-                  <p>Compare price, rent yield, break-even timing and sensitivity.</p>
+                  <h3>Dodaj drugą dzielnicę</h3>
+                  <p>Porównaj cenę, najem, moment opłacalności i wrażliwość założeń.</p>
                 </article>
               ) : null}
             </div>
 
             <div className="insight-strip">
               <div className="break-even-hero">
-                <span>Break-even</span>
+                <span>Zakup zaczyna wygrywać po</span>
                 <strong>{formatYear(result?.summary.breakEvenMedian ?? null)}</strong>
                 <small>
-                  95% CI: {formatYear(result?.summary.breakEvenLow ?? null)} - {formatYear(result?.summary.breakEvenHigh ?? null)}
+                  Przedział 95%: {formatYear(result?.summary.breakEvenLow ?? null)} - {formatYear(result?.summary.breakEvenHigh ?? null)}
                 </small>
-                <i className={isRunning ? "pulse" : ""}>{isRunning ? "Simulating" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% buy-win odds`}</i>
+                <i className={isRunning ? "pulse" : ""}>
+                  {isRunning ? "Symulacja trwa" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% szans przewagi zakupu`}
+                </i>
               </div>
               <div className="assumption-card">
-                <span>Estimated market data</span>
+                <span>Szacunkowe dane rynkowe</span>
                 <strong>{selected.name}</strong>
                 <p>{selected.note}</p>
                 <div>
                   <b>{money.format(result?.summary.purchasePrice ?? selected.pricePerM2 * settings.areaM2)}</b>
-                  <small>purchase estimate</small>
+                  <small>szacunkowa cena zakupu</small>
                 </div>
               </div>
             </div>
@@ -673,14 +712,14 @@ export default function HomePage() {
               <section className="surface chart-card tall">
                 <div className="section-title">
                   <BarChart3 size={18} />
-                  <h3>Monte Carlo wealth delta</h3>
+                  <h3>Monte Carlo: różnica majątku</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={245}>
                   <LineChart margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 8" stroke="rgba(14, 24, 56, 0.1)" />
                     <XAxis dataKey="year" type="number" domain={[1, 30]} tickLine={false} axisLine={false} />
                     <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} width={48} />
-                    <Tooltip formatter={(value) => money.format(Number(value))} labelFormatter={(label) => `Year ${label}`} />
+                    <Tooltip formatter={(value) => money.format(Number(value))} labelFormatter={(label) => `Rok ${label}`} />
                     <ReferenceLine y={0} stroke="#1a2b68" strokeDasharray="4 4" />
                     {result?.paths.map((path, index) => (
                       <Line
@@ -702,7 +741,7 @@ export default function HomePage() {
               <section className="surface chart-card">
                 <div className="section-title">
                   <SlidersHorizontal size={18} />
-                  <h3>Sensitivity ribbon</h3>
+                  <h3>Zakres wrażliwości</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={245}>
                   <AreaChart data={chartData} margin={{ top: 10, right: 8, bottom: 0, left: 0 }}>
@@ -721,15 +760,15 @@ export default function HomePage() {
               <section className="surface chart-card">
                 <div className="section-title">
                   <TrendingUp size={18} />
-                  <h3>Key metrics comparison</h3>
+                  <h3>Porównanie cen / m²</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={245}>
                   <BarChart data={comparisonData} layout="vertical" margin={{ top: 8, right: 22, bottom: 0, left: 34 }}>
                     <CartesianGrid strokeDasharray="3 8" horizontal={false} stroke="rgba(14, 24, 56, 0.1)" />
                     <XAxis type="number" tickLine={false} axisLine={false} />
                     <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={92} />
-                    <Tooltip />
-                    <Bar dataKey="price" radius={[0, 8, 8, 0]}>
+                    <Tooltip formatter={(value) => money.format(Number(value))} />
+                    <Bar dataKey="price" name="Cena / m²" radius={[0, 8, 8, 0]}>
                       {comparisonData.map((entry, index) => (
                         <Cell key={entry.name} fill={index === 0 ? "#3157ff" : "#8d54ff"} />
                       ))}
@@ -743,15 +782,15 @@ export default function HomePage() {
               <section className="surface controls-card">
                 <div className="section-title">
                   <SlidersHorizontal size={18} />
-                  <h3>Model assumptions</h3>
+                  <h3>Założenia modelu</h3>
                 </div>
                 <div className="controls compact-controls">
-                  <Slider label="Years in home" value={settings.yearsInHome} min={1} max={30} step={1} format={(value) => `${value} yrs`} onChange={(value) => updateSetting("yearsInHome", value)} />
-                  <Slider label="Apartment size" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
-                  <Slider label="Mortgage rate" value={settings.mortgageRate} min={0.025} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("mortgageRate", value)} />
-                  <Slider label="Down payment" value={settings.downPayment} min={0.1} max={0.6} step={0.01} format={percent} onChange={(value) => updateSetting("downPayment", value)} />
+                  <Slider label="Lata w mieszkaniu" value={settings.yearsInHome} min={1} max={30} step={1} format={(value) => `${value} lat`} onChange={(value) => updateSetting("yearsInHome", value)} />
+                  <Slider label="Metraż mieszkania" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
+                  <Slider label="Oprocentowanie kredytu" value={settings.mortgageRate} min={0.025} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("mortgageRate", value)} />
+                  <Slider label="Wkład własny" value={settings.downPayment} min={0.1} max={0.6} step={0.01} format={percent} onChange={(value) => updateSetting("downPayment", value)} />
                   <Slider
-                    label="Home appreciation baseline"
+                    label="Bazowy wzrost wartości"
                     value={settings.homeAppreciation}
                     min={-0.01}
                     max={0.09}
@@ -760,21 +799,21 @@ export default function HomePage() {
                     hint={appreciationHint}
                     onChange={(value) => updateSetting("homeAppreciation", value)}
                   />
-                  <Slider label="Rent growth" value={settings.rentGrowth} min={0} max={0.1} step={0.001} format={percent} onChange={(value) => updateSetting("rentGrowth", value)} />
-                  <Slider label="Investment return" value={settings.investmentReturn} min={0.005} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("investmentReturn", value)} />
-                  <Slider label="Inflation" value={settings.inflation} min={0.005} max={0.085} step={0.001} format={percent} onChange={(value) => updateSetting("inflation", value)} />
+                  <Slider label="Wzrost czynszu najmu" value={settings.rentGrowth} min={0} max={0.1} step={0.001} format={percent} onChange={(value) => updateSetting("rentGrowth", value)} />
+                  <Slider label="Zwrot z inwestycji" value={settings.investmentReturn} min={0.005} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("investmentReturn", value)} />
+                  <Slider label="Inflacja" value={settings.inflation} min={0.005} max={0.085} step={0.001} format={percent} onChange={(value) => updateSetting("inflation", value)} />
                 </div>
               </section>
 
               <section className="surface settings-card">
                 <div className="section-title">
                   <Home size={18} />
-                  <h3>Mortgage options</h3>
+                  <h3>Opcje kredytu</h3>
                 </div>
                 <div className="switches">
-                  <Toggle label="Fixed-rate option" checked={settings.mortgageType === "fixed"} onChange={(value) => updateSetting("mortgageType", value ? "fixed" : "variable")} />
-                  <Toggle label="Refinancing" checked={settings.refinancing} onChange={(value) => updateSetting("refinancing", value)} />
-                  <Toggle label="Secondary market PCC" checked={settings.secondaryMarket} onChange={(value) => updateSetting("secondaryMarket", value)} />
+                  <Toggle label="Stałe oprocentowanie" checked={settings.mortgageType === "fixed"} onChange={(value) => updateSetting("mortgageType", value ? "fixed" : "variable")} />
+                  <Toggle label="Refinansowanie" checked={settings.refinancing} onChange={(value) => updateSetting("refinancing", value)} />
+                  <Toggle label="Rynek wtórny i PCC" checked={settings.secondaryMarket} onChange={(value) => updateSetting("secondaryMarket", value)} />
                 </div>
                 <div className="source-note">
                   <MapPin size={17} />

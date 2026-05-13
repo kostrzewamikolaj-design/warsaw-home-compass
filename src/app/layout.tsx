@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Warsaw Rent vs Buy",
-  description: "Interactive Warsaw district rent-vs-buy Monte Carlo calculator"
+  title: "Warszawa: najem czy zakup",
+  description: "Interaktywny kalkulator najmu i zakupu mieszkania w warszawskich dzielnicach"
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <body>{children}</body>
     </html>
   );
