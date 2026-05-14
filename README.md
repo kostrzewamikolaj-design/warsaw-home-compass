@@ -6,7 +6,7 @@ The project is educational and pre-production. It uses static estimated market a
 
 ## Routes
 
-- `/` - premium Polish landing page for first-time visitors.
+- `/` - Polish landing page for first-time visitors.
 - `/kalkulator` - interactive rent-versus-buy dashboard and calculator.
 
 ## Current MVP Features

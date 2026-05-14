@@ -32,24 +32,24 @@ const ranges: Record<AppreciationBand, [number, number]> = {
 };
 
 const rows: Array<[string, number, number, string]> = [
-  ["Śródmieście", 14774, 112, "najwyższa płynność i ograniczona podaż w centrum"],
-  ["Mokotów", 11163, 88, "duży, płynny rynek z metrem i popytem biurowym w wybranych rejonach"],
-  ["Wilanów", 9692, 82, "rodzinny profil dzielnicy i dużo nowszej zabudowy"],
-  ["Ursynów", 9869, 78, "stabilny rynek mieszkaniowy wspierany przez metro"],
-  ["Żoliborz", 11347, 95, "ograniczona podaż i mocny segment premium na rynku wtórnym"],
-  ["Bielany", 9856, 74, "zrównoważona wartość północno-zachodniej Warszawy z dostępem do metra"],
-  ["Bemowo", 9198, 72, "korytarz wzrostu wspierany przez metro i nową zabudowę"],
-  ["Wola", 10561, 100, "silny popyt najemców przy centrum biznesowym i wysoka płynność"],
-  ["Ochota", 11139, 86, "centralna dzielnica mieszkaniowa z ograniczoną podażą"],
-  ["Praga-Północ", 11270, 82, "rewitalizujący się centralny rynek po prawej stronie Wisły"],
+  ["Śródmieście", 14774, 112, "centrum miasta, mało nowych mieszkań i duże zainteresowanie najmem"],
+  ["Mokotów", 11163, 88, "duży wybór mieszkań, metro i mocny popyt najemców w wybranych rejonach"],
+  ["Wilanów", 9692, 82, "dużo nowszej zabudowy i spokojniejszy, rodzinny charakter"],
+  ["Ursynów", 9869, 78, "stabilna dzielnica mieszkaniowa z dobrym dostępem do metra"],
+  ["Żoliborz", 11347, 95, "ograniczona podaż mieszkań i silny popyt na rynku wtórnym"],
+  ["Bielany", 9856, 74, "północno-zachodnia Warszawa z metrem i dość stabilnymi cenami"],
+  ["Bemowo", 9198, 72, "metro i nowa zabudowa podtrzymują zainteresowanie dzielnicą"],
+  ["Wola", 10561, 100, "bliskość centrum biznesowego mocno wspiera popyt najemców"],
+  ["Ochota", 11139, 86, "centralna dzielnica mieszkaniowa z ograniczoną liczbą ofert"],
+  ["Praga-Północ", 11270, 82, "centralna prawa strona Wisły, wciąż z dużymi różnicami między rejonami"],
   ["Praga-Południe", 9776, 80, "szeroki popyt od Saskiej Kępy po Gocław"],
-  ["Targówek", 8183, 70, "relatywna dostępność cenowa połączona z metrem"],
+  ["Targówek", 8183, 70, "niższe ceny niż bliżej centrum i dostęp do metra"],
   ["Białołęka", 7776, 66, "niższy próg wejścia i duża podaż nowych mieszkań"],
-  ["Wawer", 8172, 69, "zielony, podmiejski charakter z większym zróżnicowaniem transportu"],
-  ["Wesoła", 7373, 62, "zewnętrzna, mniej gęsta dzielnica mieszkaniowa"],
-  ["Rembertów", 7633, 63, "dostępniejszy cenowo rynek wschodni o mniejszej płynności"],
-  ["Ursus", 9432, 68, "kolej, dostępność cenowa i nowa zabudowa rodzinna"],
-  ["Włochy", 10500, 76, "dostęp do lotniska i biznesu oraz mieszany zasób mieszkaniowy"]
+  ["Wawer", 8172, 69, "zielony, bardziej podmiejski charakter i różny dostęp do transportu"],
+  ["Wesoła", 7373, 62, "mniej gęsta dzielnica mieszkaniowa na obrzeżach miasta"],
+  ["Rembertów", 7633, 63, "tańsza wschodnia część miasta, ale z mniejszą płynnością rynku"],
+  ["Ursus", 9432, 68, "kolej, niższy próg wejścia i sporo nowszej zabudowy rodzinnej"],
+  ["Włochy", 10500, 76, "bliskość lotniska, stref biurowych i zróżnicowana zabudowa"]
 ];
 
 export const districts: DistrictMarket[] = rows.map(([name, pricePerM2, rentPerM2, note]) => {
@@ -78,4 +78,4 @@ export const districtById = new Map(districts.map((district) => [district.id, di
 export const dataLastUpdated = "maj 2026";
 
 export const dataSourceNote =
-  "Szacunkowy zestaw danych MVP, ostatnia aktualizacja: maj 2026. Ceny zakupu i najmu są statycznymi założeniami lokalnymi skalibrowanymi na podstawie publicznych benchmarków warszawskiego rynku i różnic między dzielnicami; nie są aktywnymi ogłoszeniami ani oficjalną wyceną.";
+  "Dane są szacunkowe i statyczne, ostatnia aktualizacja: maj 2026. Ceny zakupu i stawki najmu opierają się na publicznych punktach odniesienia dla warszawskiego rynku oraz różnicach między dzielnicami. To nie są aktywne ogłoszenia ani oficjalna wycena.";

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-14 - Natural Polish copy pass
+
+- Refined Polish UX copy across the landing page and calculator to sound more natural, clear and human while preserving formulas, routes and disclaimers.
+
 ## 2026-05-13 - Responsive + runtime hardening pass
 
 Branch: `landing-page-mvp`  

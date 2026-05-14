@@ -5,19 +5,19 @@ import { ArrowRight, BadgeCheck, Building2, FileText, Gauge, Layers3, LineChart,
 export const metadata: Metadata = {
   title: "Wynajem czy zakup mieszkania w Warszawie?",
   description:
-    "Porównaj wynajem i zakup mieszkania w warszawskich dzielnicach. Sprawdź orientacyjny moment opłacalności, koszty kredytu i alternatywę inwestowania kapitału.",
+    "Porównaj najem i zakup mieszkania w Warszawie. Zobacz, jak kredyt, wkład własny, czynsz i inwestowanie oszczędności zmieniają wynik po latach.",
   openGraph: {
     title: "Wynajem czy zakup mieszkania w Warszawie?",
     description:
-      "Porównaj wynajem i zakup mieszkania w warszawskich dzielnicach. Sprawdź orientacyjny moment opłacalności, koszty kredytu i alternatywę inwestowania kapitału.",
+      "Porównaj najem i zakup mieszkania w Warszawie. Zobacz, jak kredyt, wkład własny, czynsz i inwestowanie oszczędności zmieniają wynik po latach.",
     type: "website",
     locale: "pl_PL"
   }
 };
 
 const modelItems = [
-  { icon: Building2, label: "Cena mieszkania za m²" },
-  { icon: MapPinned, label: "Najem za m²" },
+  { icon: Building2, label: "Cena zakupu za m²" },
+  { icon: MapPinned, label: "Stawka najmu za m²" },
   { icon: Gauge, label: "Oprocentowanie kredytu" },
   { icon: WalletCards, label: "Wkład własny" },
   { icon: Layers3, label: "Czynsz administracyjny" },
@@ -32,27 +32,27 @@ const outcomeItems = [
   {
     icon: Gauge,
     title: "Moment opłacalności zakupu",
-    copy: "Sprawdź orientacyjnie, po ilu latach zakup zaczyna wygrywać z najmem w przyjętych założeniach."
+    copy: "Sprawdź, po ilu latach zakup może zacząć wypadać lepiej niż najem przy Twoich założeniach."
   },
   {
     icon: WalletCards,
-    title: "Różnica majątku względem najmu",
-    copy: "Porównaj kapitał w mieszkaniu z wynikiem scenariusza, w którym wynajmujesz i inwestujesz różnicę."
+    title: "Ile możesz mieć po latach",
+    copy: "Porównaj wartość mieszkania z najmem i inwestowaniem pieniędzy, których nie wkładasz w zakup."
   },
   {
     icon: MapPinned,
     title: "Porównanie dzielnic Warszawy",
-    copy: "Zestaw ze sobą lokalizacje o różnych cenach, czynszach najmu i potencjale wzrostu wartości."
+    copy: "Zobacz obok siebie dzielnice z różnymi cenami zakupu, stawkami najmu i założeniami wzrostu wartości."
   },
   {
     icon: Radar,
-    title: "Zakres scenariuszy Monte Carlo",
-    copy: "Zobacz nie tylko jedną ścieżkę, ale także rozpiętość możliwych wyników przy zmiennych założeniach."
+    title: "Zakres możliwych wyników",
+    copy: "Zobacz nie tylko jedną liczbę, ale też zakres wyników, gdy część założeń zmienia się w czasie."
   },
   {
     icon: FileText,
-    title: "Eksport analizy do PDF",
-    copy: "Zapisz aktualny scenariusz jako czytelne podsumowanie do rozmowy z partnerem, doradcą lub bankiem."
+    title: "Podsumowanie w PDF",
+    copy: "Zapisz wybrane ustawienia jako krótkie podsumowanie do rozmowy z partnerem, doradcą albo bankiem."
   }
 ];
 
@@ -60,38 +60,38 @@ const steps = [
   {
     eyebrow: "01",
     title: "Wybierz dzielnicę",
-    copy: "Zacznij od realnego miejsca: Mokotów, Wola, Ursynów, Śródmieście albo dowolna inna dzielnica Warszawy."
+    copy: "Zacznij od miejsca, które realnie bierzesz pod uwagę: Mokotów, Wola, Ursynów, Śródmieście albo inna dzielnica."
   },
   {
     eyebrow: "02",
-    title: "Dostosuj założenia",
-    copy: "Ustaw metraż, wkład własny, oprocentowanie, horyzont mieszkania, wzrost najmu i zwrot z inwestycji."
+    title: "Ustaw swoje liczby",
+    copy: "Podaj metraż, wkład własny, oprocentowanie, planowany czas mieszkania, wzrost najmu i zwrot z inwestycji."
   },
   {
     eyebrow: "03",
-    title: "Sprawdź scenariusze",
-    copy: "Zobacz moment opłacalności, rozkład wyników i porównanie dzielnic w jednym czytelnym widoku."
+    title: "Porównaj wynik",
+    copy: "Zobacz moment opłacalności, zakres wyników i różnice między dzielnicami w jednym widoku."
   }
 ];
 
 const methodologyPoints = [
-  "Model porównuje zakup mieszkania z kredytem z alternatywą wynajmu i inwestowania różnicy w miesięcznych kosztach.",
-  "Uwzględnia m.in. dzielnicę, metraż, oprocentowanie kredytu, wkład własny, koszty utrzymania, wzrost najmu, wzrost wartości mieszkania i zwrot z inwestycji.",
-  "Wynik pokazuje edukacyjny scenariusz decyzyjny. Nie jest rekomendacją zakupu, najmu, inwestycji ani wyboru kredytu."
+  "Porównujemy zakup mieszkania na kredyt z najmem i inwestowaniem pieniędzy, które w innym przypadku poszłyby na zakup.",
+  "Uwzględniamy m.in. dzielnicę, metraż, oprocentowanie kredytu, wkład własny, utrzymanie mieszkania, wzrost najmu, wzrost wartości lokalu i zwrot z inwestycji.",
+  "Wynik służy do orientacyjnej analizy. Nie jest rekomendacją zakupu, najmu, inwestycji ani wyboru kredytu."
 ];
 
 const trustItems = [
   {
     title: "Dane szacunkowe, nie ogłoszenia na żywo",
-    copy: "Ceny i czynsze są lokalnym, statycznym modelem referencyjnym. Przed decyzją trzeba sprawdzić aktualne oferty i warunki finansowania."
+    copy: "Ceny i czynsze są statycznymi założeniami dla dzielnic. Przed decyzją sprawdź aktualne oferty i warunki finansowania."
   },
   {
-    title: "Transparentny model edukacyjny",
-    copy: "Założenia są widoczne i możliwe do zmiany, dzięki czemu możesz sprawdzić, które czynniki najmocniej wpływają na wynik."
+    title: "Widzisz, co wpływa na wynik",
+    copy: "Założenia są widoczne i możesz je zmieniać, żeby sprawdzić, które liczby mają największe znaczenie."
   },
   {
-    title: "Wynik nie zastępuje doradcy",
-    copy: "To narzędzie do uporządkowania myślenia, a nie porada finansowa, kredytowa, prawna ani inwestycyjna."
+    title: "To nie zastępuje porady",
+    copy: "Kalkulator pomaga uporządkować temat, ale nie jest poradą finansową, kredytową, prawną ani inwestycyjną."
   }
 ];
 
@@ -103,12 +103,12 @@ export default function LandingPage() {
           <span>W</span>
           <div>
             <strong>Warsaw Home Compass</strong>
-            <small>Warszawska inteligencja mieszkaniowa</small>
+            <small>Najem czy zakup w liczbach</small>
           </div>
         </Link>
         <nav aria-label="Nawigacja strony">
           <a href="#problem">Problem</a>
-          <a href="#model">Model</a>
+          <a href="#model">Założenia</a>
           <a href="#zaufanie">Zaufanie</a>
         </nav>
         <Link className="nav-cta" href="/kalkulator">
@@ -120,12 +120,12 @@ export default function LandingPage() {
         <div className="landing-hero-copy">
           <span className="landing-kicker">
             <Sparkles size={16} />
-            Interaktywny model decyzyjny dla Warszawy
+            Narzędzie do porównania najmu i zakupu w Warszawie
           </span>
           <h1>Wynajem czy zakup mieszkania w Warszawie?</h1>
           <p>
-            Sprawdź orientacyjny moment opłacalności zakupu, różnicę majątku względem najmu oraz wpływ kredytu, czynszu,
-            wzrostu cen i inwestowania kapitału w konkretnych dzielnicach Warszawy.
+            Zobacz, który wybór może wypaść lepiej po kilku latach. Porównaj ratę kredytu, czynsz najmu, wkład własny,
+            wzrost cen i inwestowanie oszczędności w konkretnych dzielnicach Warszawy.
           </p>
           <div className="landing-actions">
             <Link className="landing-primary" href="/kalkulator">
@@ -133,27 +133,27 @@ export default function LandingPage() {
               <ArrowRight size={18} />
             </Link>
             <a className="landing-secondary" href="#model">
-              Zobacz, jak działa model
+              Zobacz, jak to liczymy
             </a>
           </div>
           <p className="cta-note">
-            Bez zakładania konta. Dane są szacunkowe. Wynik traktuj jako punkt wyjścia do decyzji.
+            Bez zakładania konta. Dane są szacunkowe i służą do orientacyjnej analizy.
           </p>
           <div className="hero-proof">
-            <span>18 dzielnic Warszawy</span>
-            <span>500+ ścieżek Monte Carlo</span>
-            <span>Szacunkowe dane lokalne</span>
+            <span>18 warszawskich dzielnic</span>
+            <span>500+ symulacji Monte Carlo</span>
+            <span>Szacunkowe dane dzielnicowe</span>
           </div>
         </div>
 
-        <div className="hero-product" aria-label="Podgląd dashboardu kalkulatora">
-          <span className="preview-context">Przykładowy podgląd analizy</span>
+        <div className="hero-product" aria-label="Podgląd kalkulatora">
+          <span className="preview-context">Przykładowe porównanie</span>
           <div className="hero-product-top">
             <div>
-              <span>Wybrana dzielnica</span>
+              <span>Dzielnica</span>
               <strong>Mokotów</strong>
             </div>
-            <small>Scenariusz: para</small>
+            <small>Dla pary</small>
           </div>
           <div className="preview-grid">
             <div className="preview-map">
@@ -171,11 +171,11 @@ export default function LandingPage() {
                 <strong>11 lat</strong>
               </div>
               <div>
-                <span>Relacja najmu do ceny</span>
+                <span>Najem / cena</span>
                 <strong>5,18%</strong>
               </div>
               <div>
-                <span>Szansa przewagi zakupu</span>
+                <span>Zakup lepszy w symulacji</span>
                 <strong>58%</strong>
               </div>
             </div>
@@ -195,11 +195,11 @@ export default function LandingPage() {
 
       <section className="landing-band outcome-band" id="efekt">
         <div className="section-heading">
-          <span>Co zobaczysz w kalkulatorze?</span>
-          <h2>Konkretny obraz decyzji, zanim wejdziesz w arkusz, ofertę kredytu albo negocjacje.</h2>
+          <span>Co pokaże kalkulator?</span>
+          <h2>Porównanie, z którym łatwiej rozmawiać o mieszkaniu, kredycie i najmie.</h2>
           <p>
-            Kalkulator porządkuje kilka zmiennych naraz: lokalizację, metraż, kredyt, czynsz najmu, koszty utrzymania i
-            alternatywę inwestowania kapitału.
+            W jednym miejscu zbierasz lokalizację, metraż, kredyt, czynsz najmu, koszty utrzymania i inwestowanie
+            oszczędności poza mieszkaniem.
           </p>
         </div>
         <div className="outcome-grid">
@@ -220,29 +220,29 @@ export default function LandingPage() {
 
       <section id="problem" className="landing-band problem-band">
         <div className="section-heading">
-          <span>Dlaczego to trudna decyzja</span>
-          <h2>Jedno mieszkanie, wiele zmiennych finansowych.</h2>
+          <span>Co utrudnia decyzję</span>
+          <h2>To nie jest tylko porównanie raty i czynszu.</h2>
         </div>
         <div className="problem-grid">
           <article>
             <strong>Wysokie ceny zakupu</strong>
-            <p>Cena za metr i wkład własny mocno zmieniają próg wejścia, zwłaszcza w centralnych dzielnicach.</p>
+            <p>Cena za metr i wkład własny mocno zmieniają próg wejścia, szczególnie w centralnych dzielnicach.</p>
           </article>
           <article>
             <strong>Stopy i koszt kredytu</strong>
-            <p>Rata kredytu, refinansowanie i wariant stałego oprocentowania wpływają na wynik bardziej niż sama cena.</p>
+            <p>Rata, refinansowanie i rodzaj oprocentowania potrafią zmienić wynik bardziej niż sama cena mieszkania.</p>
           </article>
           <article>
             <strong>Wzrost najmu</strong>
-            <p>Rosnące czynsze mogą skracać moment opłacalności zakupu, ale efekt zależy od horyzontu mieszkania.</p>
+            <p>Rosnące czynsze mogą przybliżać moment opłacalności zakupu, ale dużo zależy od tego, jak długo chcesz zostać w mieszkaniu.</p>
           </article>
           <article>
-            <strong>Koszt alternatywny kapitału</strong>
-            <p>Wkład własny można wydać na mieszkanie albo inwestować. Model pokazuje różnicę majątku w czasie.</p>
+            <strong>Co robisz z wkładem własnym</strong>
+            <p>Wkład własny możesz włożyć w mieszkanie albo inwestować. Kalkulator pokazuje, jak ta decyzja zmienia wynik po latach.</p>
           </article>
           <article>
-            <strong>Niepewna aprecjacja</strong>
-            <p>Wartość mieszkania nie rośnie liniowo, dlatego symulacja pokazuje zakres scenariuszy, nie jedną obietnicę.</p>
+            <strong>Niepewny wzrost wartości</strong>
+            <p>Wartość mieszkania nie rośnie równo co roku, dlatego symulacja pokazuje zakres wyników, a nie jedną obietnicę.</p>
           </article>
         </div>
       </section>
@@ -250,7 +250,7 @@ export default function LandingPage() {
       <section className="landing-band how-band">
         <div className="section-heading">
           <span>Jak to działa</span>
-          <h2>Od dzielnicy do scenariusza w kilka minut.</h2>
+          <h2>Od dzielnicy do porównania w kilka minut.</h2>
         </div>
         <div className="steps-grid">
           {steps.map((step) => (
@@ -265,8 +265,8 @@ export default function LandingPage() {
 
       <section id="model" className="landing-band model-band">
         <div className="section-heading">
-          <span>Co uwzględnia model</span>
-          <h2>Nie tylko rata kredytu. Pełniejszy obraz decyzji.</h2>
+          <span>Co bierzemy pod uwagę</span>
+          <h2>Nie tylko rata kredytu. Także koszty utrzymania, wkład własny i czas.</h2>
         </div>
         <div className="model-grid">
           {modelItems.map((item) => {
@@ -283,11 +283,11 @@ export default function LandingPage() {
 
       <section className="landing-band methodology-section" id="metodologia">
         <div className="section-heading compact">
-          <span>Metodologia w skrócie</span>
-          <h2>Model porównuje dwa sposoby użycia tych samych pieniędzy.</h2>
+          <span>Jak liczymy wynik</span>
+          <h2>Porównujemy dwa sposoby wykorzystania tych samych pieniędzy.</h2>
           <p>
-            Zamiast pytać tylko, czy rata jest wyższa od czynszu, pokazujemy szerszy obraz: przepływy miesięczne, kapitał
-            uwięziony we wkładzie własnym, koszty utrzymania i możliwy wynik alternatywnej inwestycji.
+            Nie sprawdzamy tylko, czy rata jest wyższa od czynszu. Liczymy też wkład własny, koszty utrzymania mieszkania
+            i możliwy wynik inwestowania oszczędności poza zakupem.
           </p>
         </div>
         <div className="methodology-card">
@@ -303,7 +303,7 @@ export default function LandingPage() {
       <section id="zaufanie" className="trust-section">
         <div className="trust-copy">
           <span>Edukacyjne MVP</span>
-          <h2>Przejrzysty model zamiast obietnicy.</h2>
+          <h2>Założenia na wierzchu, bez obietnic.</h2>
         </div>
         <div className="trust-grid">
           {trustItems.map((item) => (
@@ -317,9 +317,9 @@ export default function LandingPage() {
       </section>
 
       <section className="final-cta">
-        <span>Gotowy na pierwszy test?</span>
+        <span>Zacznij od jednej dzielnicy</span>
         <h2>Sprawdź swoją dzielnicę.</h2>
-        <p>Wybierz lokalizację, ustaw własne założenia i zobacz, jak zmienia się wynik.</p>
+        <p>Wybierz lokalizację, ustaw własne liczby i zobacz, jak zmienia się wynik.</p>
         <Link className="landing-primary" href="/kalkulator">
           Sprawdź swoją dzielnicę
           <ArrowRight size={18} />

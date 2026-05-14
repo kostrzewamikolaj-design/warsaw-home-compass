@@ -16,7 +16,7 @@ Current branch / PR context:
 
 ## Current Routes
 
-- `/` - premium Polish landing page explaining the product, model scope and trust boundaries.
+- `/` - Polish landing page explaining the product, model scope and trust boundaries.
 - `/kalkulator` - interactive rent-versus-buy calculator dashboard.
 
 ## Completed Features

@@ -68,7 +68,7 @@ export type SimulationResult = {
 
 export const scenarios: Record<ScenarioKey, { label: string; areaM2: number; defaults: Partial<Settings> }> = {
   single: {
-    label: "Singiel / singielka",
+    label: "Jedna osoba",
     areaM2: 32,
     defaults: { downPayment: 0.2, yearsInHome: 7, investmentProfile: "ETF" }
   },
@@ -83,7 +83,7 @@ export const scenarios: Record<ScenarioKey, { label: string; areaM2: number; def
     defaults: { downPayment: 0.25, yearsInHome: 15, investmentProfile: "Bonds" }
   },
   investor: {
-    label: "Inwestor na wynajem",
+    label: "Zakup pod wynajem",
     areaM2: 45,
     defaults: { downPayment: 0.35, yearsInHome: 12, mortgageType: "variable", investmentProfile: "ETF" }
   }
