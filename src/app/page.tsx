@@ -1,828 +1,329 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, BadgeCheck, Building2, FileText, Gauge, Layers3, LineChart, MapPinned, Radar, ShieldCheck, Sparkles, TrendingUp, WalletCards } from "lucide-react";
 
-import bbox from "@turf/bbox";
-import { motion } from "framer-motion";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import {
-  BarChart3,
-  Bell,
-  BookOpen,
-  ChevronDown,
-  Download,
-  FileText,
-  Grid2X2,
-  Heart,
-  Home,
-  MapPin,
-  MoreVertical,
-  Plus,
-  Search,
-  Share2,
-  SlidersHorizontal,
-  Sparkles,
-  TrendingUp
-} from "lucide-react";
-import mapboxgl from "mapbox-gl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
-import type { FeatureCollection } from "geojson";
-import { dataLastUpdated, dataSourceNote, districtById, districtByName, districts, type DistrictMarket } from "@/lib/districts";
-import {
-  defaultSettings,
-  money,
-  number,
-  percent,
-  scenarios,
-  type ScenarioKey,
-  type Settings,
-  type SimulationResult,
-  type SimulationSummary
-} from "@/lib/model";
-
-mapboxgl.accessToken = "";
-
-const cartoPositron = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
-
-const ratioColor = (ratio: number) => {
-  const t = Math.max(0, Math.min(1, (ratio - 0.006) / 0.0045));
-  const from = [230, 237, 255];
-  const mid = [125, 98, 255];
-  const to = [0, 175, 191];
-  const mix = t < 0.58 ? t / 0.58 : (t - 0.58) / 0.42;
-  const a = t < 0.58 ? from : mid;
-  const b = t < 0.58 ? mid : to;
-  const rgb = a.map((channel, index) => Math.round(channel + (b[index] - channel) * mix));
-  return `rgb(${rgb.join(",")})`;
-};
-
-const svgBounds = {
-  minLon: 20.84,
-  maxLon: 21.275,
-  minLat: 52.095,
-  maxLat: 52.37,
-  width: 1000,
-  height: 760
-};
-
-const projectPoint = ([lon, lat]: number[]) => {
-  const x = ((lon - svgBounds.minLon) / (svgBounds.maxLon - svgBounds.minLon)) * svgBounds.width;
-  const y = ((svgBounds.maxLat - lat) / (svgBounds.maxLat - svgBounds.minLat)) * svgBounds.height;
-  return [x, y];
-};
-
-const polygonPath = (coordinates: number[][][]) =>
-  coordinates
-    .map((ring) =>
-      ring
-        .filter((_, index) => index % 5 === 0)
-        .map((point, index) => {
-          const [x, y] = projectPoint(point);
-          return `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-        })
-        .join(" ")
-        .concat(" Z")
-    )
-    .join(" ");
-
-const formatYear = (value: number | null) => (value === null ? "Brak momentu opłacalności" : `${number.format(value)} lat`);
-
-const bandLabels = {
-  Premium: "premium",
-  Stable: "stabilny",
-  Growth: "wzrostowy",
-  Emerging: "wschodzący",
-  "Outer value": "zewnętrzna wartość"
-} as const;
-
-const mvpDisclaimer =
-  "To edukacyjne MVP oparte na statycznych, szacunkowych danych. Nie stanowi porady finansowej, kredytowej, prawnej ani inwestycyjnej. Zweryfikuj założenia samodzielnie przed podjęciem decyzji.";
-
-const hashState = (districtId: string, compareId: string | null, settings: Settings) => {
-  const payload = JSON.stringify({ districtId, compareId, settings });
-  return btoa(encodeURIComponent(payload));
-};
-
-const parseHash = () => {
-  if (typeof window === "undefined" || window.location.hash.length < 2) return null;
-  try {
-    return JSON.parse(decodeURIComponent(atob(window.location.hash.slice(1)))) as {
-      districtId?: string;
-      compareId?: string | null;
-      settings?: Partial<Settings>;
-    };
-  } catch {
-    return null;
+export const metadata: Metadata = {
+  title: "Wynajem czy zakup mieszkania w Warszawie?",
+  description:
+    "Porównaj najem i zakup mieszkania w Warszawie. Sprawdź, jak rata, wkład własny, czynsz i inwestowanie oszczędności zmieniają wynik po latach.",
+  openGraph: {
+    title: "Wynajem czy zakup mieszkania w Warszawie?",
+    description:
+      "Porównaj najem i zakup mieszkania w Warszawie. Sprawdź, jak rata, wkład własny, czynsz i inwestowanie oszczędności zmieniają wynik po latach.",
+    type: "website",
+    locale: "pl_PL"
   }
 };
 
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  step,
-  format,
-  hint,
-  onChange
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  format: (value: number) => string;
-  hint?: string;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="control">
-      <span>
-        {label}
-        <strong>{format(value)}</strong>
-      </span>
-      <input type="range" value={value} min={min} max={max} step={step} onChange={(event) => onChange(Number(event.target.value))} />
-      {hint ? <small>{hint}</small> : null}
-    </label>
-  );
-}
+const modelItems = [
+  { icon: Building2, label: "Cena zakupu za m²" },
+  { icon: MapPinned, label: "Stawka najmu za m²" },
+  { icon: Gauge, label: "Oprocentowanie kredytu" },
+  { icon: WalletCards, label: "Wkład własny" },
+  { icon: Layers3, label: "Czynsz administracyjny" },
+  { icon: ShieldCheck, label: "Utrzymanie i remonty" },
+  { icon: BadgeCheck, label: "Ubezpieczenie" },
+  { icon: TrendingUp, label: "Wzrost najmu" },
+  { icon: LineChart, label: "Zwrot z inwestycji" },
+  { icon: Radar, label: "Symulacja Monte Carlo" }
+];
 
-function Toggle({
-  label,
-  checked,
-  onChange
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <button className={`toggle ${checked ? "active" : ""}`} onClick={() => onChange(!checked)} type="button">
-      <span>{label}</span>
-      <i />
-    </button>
-  );
-}
+const outcomeItems = [
+  {
+    icon: Gauge,
+    title: "Kiedy zakup zaczyna się bronić",
+    copy: "Sprawdź, po ilu latach zakup może mieć przewagę nad najmem przy Twoich założeniach."
+  },
+  {
+    icon: WalletCards,
+    title: "Ile możesz mieć po latach",
+    copy: "Porównaj wartość mieszkania z najmem i inwestowaniem pieniędzy, których nie wydajesz na zakup."
+  },
+  {
+    icon: MapPinned,
+    title: "Porównanie dzielnic Warszawy",
+    copy: "Zobacz obok siebie dzielnice z różnymi cenami zakupu, stawkami najmu i tempem wzrostu wartości."
+  },
+  {
+    icon: Radar,
+    title: "Zakres możliwych wyników",
+    copy: "Zobacz nie tylko jedną liczbę, ale też zakres wyników, gdy założenia zmieniają się w czasie."
+  },
+  {
+    icon: FileText,
+    title: "Podsumowanie w PDF",
+    copy: "Zapisz wybrane ustawienia jako krótkie podsumowanie do rozmowy z partnerem, doradcą albo bankiem."
+  }
+];
 
-function NavItem({
-  icon,
-  label,
-  active = false,
-  disabled = false
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      className={`nav-item ${active ? "active" : ""}`}
-      disabled={disabled}
-      title={disabled ? "Planowane po publicznym MVP" : undefined}
-      type="button"
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
+const steps = [
+  {
+    eyebrow: "01",
+    title: "Wybierz dzielnicę",
+    copy: "Zacznij od miejsca, które naprawdę bierzesz pod uwagę: Mokotów, Wola, Ursynów, Śródmieście albo inna dzielnica."
+  },
+  {
+    eyebrow: "02",
+    title: "Ustaw swoje liczby",
+    copy: "Wpisz metraż, wkład własny, oprocentowanie, planowany czas mieszkania, wzrost najmu i zwrot z inwestycji."
+  },
+  {
+    eyebrow: "03",
+    title: "Zobacz wynik",
+    copy: "Sprawdź próg opłacalności, zakres wyników i różnice między dzielnicami w jednym widoku."
+  }
+];
 
-function MetricTile({
-  label,
-  value,
-  delta,
-  accent = "blue"
-}: {
-  label: string;
-  value: string;
-  delta?: string;
-  accent?: "blue" | "violet" | "teal";
-}) {
-  return (
-    <div className={`metric-tile ${accent}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      {delta ? <small>{delta}</small> : null}
-    </div>
-  );
-}
+const methodologyPoints = [
+  "Porównujemy zakup mieszkania na kredyt z najmem i inwestowaniem pieniędzy, które inaczej poszłyby na zakup.",
+  "Uwzględniamy m.in. dzielnicę, metraż, oprocentowanie kredytu, wkład własny, utrzymanie mieszkania, wzrost najmu, wzrost wartości lokalu i zwrot z inwestycji.",
+  "Wynik służy do orientacyjnej analizy. Nie jest rekomendacją zakupu, najmu, inwestycji ani wyboru kredytu."
+];
 
-function DistrictCard({
-  district,
-  summary,
-  selected,
-  index
-}: {
-  district: DistrictMarket;
-  summary?: SimulationSummary;
-  selected: boolean;
-  index: number;
-}) {
-  const ratio = district.rentPerM2 / district.pricePerM2;
+const trustItems = [
+  {
+    title: "Dane szacunkowe, nie ogłoszenia na żywo",
+    copy: "Ceny i czynsze są statycznymi założeniami dla dzielnic. Przed decyzją sprawdź aktualne oferty i warunki finansowania."
+  },
+  {
+    title: "Widzisz, co wpływa na wynik",
+    copy: "Założenia są widoczne. Możesz je zmieniać i sprawdzić, które liczby mają największe znaczenie."
+  },
+  {
+    title: "To nie zastępuje porady",
+    copy: "Kalkulator pomaga uporządkować temat, ale nie jest poradą finansową, kredytową, prawną ani inwestycyjną."
+  }
+];
+
+export default function LandingPage() {
   return (
-    <motion.article className={`district-card ${selected ? "selected" : ""}`} layout>
-      <header>
-        <div className="district-title">
-          <i>{index}</i>
+    <main className="landing-page">
+      <header className="landing-nav">
+        <Link className="landing-brand" href="/">
+          <span>W</span>
           <div>
-            <h3>{district.name}</h3>
-            <span>{bandLabels[district.band]}</span>
+            <strong>Warsaw Home Compass</strong>
+            <small>Najem czy zakup, policzone spokojnie</small>
+          </div>
+        </Link>
+        <nav aria-label="Nawigacja strony">
+          <a href="#problem">Problem</a>
+          <a href="#model">Założenia</a>
+          <a href="#zaufanie">Zaufanie</a>
+        </nav>
+        <Link className="nav-cta" href="/kalkulator">
+          Uruchom kalkulator
+        </Link>
+      </header>
+
+      <section className="landing-hero">
+        <div className="landing-hero-copy">
+          <span className="landing-kicker">
+            <Sparkles size={16} />
+            Narzędzie do porównania najmu i zakupu w Warszawie
+          </span>
+          <h1>Wynajem czy zakup mieszkania w Warszawie?</h1>
+          <p>
+            Zobacz, który wybór może mieć więcej sensu przy Twoich założeniach. Porównaj ratę kredytu, czynsz najmu,
+            wkład własny, wzrost cen i inwestowanie oszczędności w konkretnych dzielnicach Warszawy.
+          </p>
+          <div className="landing-actions">
+            <Link className="landing-primary" href="/kalkulator">
+              Uruchom kalkulator
+              <ArrowRight size={18} />
+            </Link>
+            <a className="landing-secondary" href="#model">
+              Zobacz, jak to liczymy
+            </a>
+          </div>
+          <p className="cta-note">
+            Bez konta. Dane są szacunkowe i służą do orientacyjnej analizy.
+          </p>
+          <div className="hero-proof">
+            <span>18 warszawskich dzielnic</span>
+            <span>500+ symulacji Monte Carlo</span>
+            <span>Szacunkowe dane dzielnicowe</span>
           </div>
         </div>
-        <button type="button" aria-label="Więcej akcji dla dzielnicy">
-          <MoreVertical size={18} />
-        </button>
-      </header>
-      <div className="district-metrics">
-        <MetricTile label="Cena / m²" value={`${number.format(district.pricePerM2)} zł`} delta="mediana" accent="blue" />
-        <MetricTile label="Najem / m² / mies." value={`${number.format(district.rentPerM2)} zł`} delta="stawka ofertowa" accent="teal" />
-        <MetricTile label="Relacja najmu do ceny" value={percent(ratio)} delta={`segment: ${bandLabels[district.band]}`} accent="violet" />
-        <MetricTile label="Moment opłacalności" value={formatYear(summary?.breakEvenMedian ?? null)} delta="ścieżka medianowa" accent="blue" />
-        <MetricTile label="Szansa przewagi zakupu" value={`${Math.round((summary?.buyWinsAtHorizon ?? 0) * 100)}%`} delta="wybrany horyzont" accent="teal" />
-        <MetricTile label="Różnica majątku" value={money.format(summary?.finalMedianDelta ?? 0)} delta="względem najmu" accent="violet" />
-      </div>
-    </motion.article>
-  );
-}
 
-export default function HomePage() {
-  const restored = useMemo(parseHash, []);
-  const [selectedId, setSelectedId] = useState(restored?.districtId && districtById.has(restored.districtId) ? restored.districtId : "mokotow");
-  const [compareId, setCompareId] = useState<string | null>(
-    restored?.compareId && districtById.has(restored.compareId) ? restored.compareId : "wola"
-  );
-  const [settings, setSettings] = useState<Settings>({ ...defaultSettings, ...restored?.settings });
-  const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
-  const [result, setResult] = useState<SimulationResult | null>(null);
-  const [isRunning, setIsRunning] = useState(true);
-  const [query, setQuery] = useState("");
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState("");
-  const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const workerRef = useRef<Worker | null>(null);
-  const reportRef = useRef<HTMLDivElement | null>(null);
-
-  const selected = districtById.get(selectedId) ?? districts[0];
-  const compare = compareId ? districtById.get(compareId) ?? null : null;
-  const selectedDistricts = [selected, compare].filter(Boolean) as DistrictMarket[];
-
-  const enrichedGeojson = useMemo(() => {
-    if (!geojson) return null;
-    return {
-      ...geojson,
-      features: geojson.features.map((feature) => {
-        const name = String(feature.properties?.name ?? "");
-        const market = districtByName.get(name);
-        return {
-          ...feature,
-          properties: {
-            ...feature.properties,
-            ratio: market ? market.rentPerM2 / market.pricePerM2 : 0,
-            pricePerM2: market?.pricePerM2,
-            rentPerM2: market?.rentPerM2,
-            band: market?.band
-          }
-        };
-      })
-    } satisfies FeatureCollection;
-  }, [geojson]);
-
-  const runSimulation = useCallback(() => {
-    if (!workerRef.current) return;
-    setIsRunning(true);
-    workerRef.current.postMessage({
-      district: selected,
-      compareDistrict: compare,
-      settings,
-      paths: 650
-    });
-  }, [compare, selected, settings]);
-
-  useEffect(() => {
-    workerRef.current = new Worker(new URL("../workers/monteCarlo.worker.ts", import.meta.url), { type: "module" });
-    workerRef.current.onmessage = (event: MessageEvent<SimulationResult>) => {
-      setResult(event.data);
-      setIsRunning(false);
-    };
-    return () => workerRef.current?.terminate();
-  }, []);
-
-  useEffect(() => {
-    fetch("/data/warsaw-districts.geojson")
-      .then((response) => response.json())
-      .then(setGeojson)
-      .catch(() => setGeojson(null));
-  }, []);
-
-  useEffect(() => {
-    runSimulation();
-  }, [runSimulation]);
-
-  useEffect(() => {
-    if (!mapContainer.current || mapRef.current || !enrichedGeojson) return;
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: cartoPositron,
-      center: [21.0122, 52.2297],
-      zoom: 9.2,
-      attributionControl: false,
-      interactive: false
-    });
-    mapRef.current = map;
-    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
-
-    map.on("load", () => {
-      map.addSource("districts", { type: "geojson", data: enrichedGeojson });
-    });
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, [enrichedGeojson]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !enrichedGeojson || !map.getSource("districts")) return;
-    const districtFeature = enrichedGeojson.features.find(
-      (feature) => String((feature.properties as { name?: string } | null)?.name ?? "") === selected.name
-    );
-    if (districtFeature) {
-      const [west, south, east, north] = bbox(districtFeature);
-      map.fitBounds(
-        [
-          [west, south],
-          [east, north]
-        ],
-        { padding: 72, duration: 900, essential: true }
-      );
-    }
-  }, [enrichedGeojson, selected.name]);
-
-  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings((current) => ({ ...current, [key]: value }));
-
-  const flashActionMessage = (message: string) => {
-    setActionMessage(message);
-    window.setTimeout(() => setActionMessage(""), 3200);
-  };
-
-  const applyScenario = (key: ScenarioKey) => {
-    const scenario = scenarios[key];
-    setSettings((current) => ({ ...current, scenario: key, areaM2: scenario.areaM2, ...scenario.defaults }));
-  };
-
-  const share = async () => {
-    const hash = hashState(selectedId, compareId, settings);
-    const url = `${window.location.origin}${window.location.pathname}#${hash}`;
-    window.history.replaceState(null, "", `#${hash}`);
-    try {
-      await navigator.clipboard?.writeText(url);
-      flashActionMessage("Link do analizy został skopiowany.");
-    } catch {
-      flashActionMessage("Link zapisany w adresie strony. Możesz skopiować go z paska przeglądarki.");
-    }
-  };
-
-  const exportPdf = async () => {
-    if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.6 });
-    const image = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
-    pdf.save(`warszawa-najem-czy-zakup-${selected.id}.pdf`);
-    flashActionMessage("PDF został wygenerowany.");
-  };
-
-  const filteredDistricts = districts.filter((district) => district.name.toLowerCase().includes(query.toLowerCase()));
-  const chartData = result?.yearly.map((point) => ({
-    ...point,
-    floor95: point.p05,
-    band95: point.p95 - point.p05,
-    floor50: point.p25,
-    band50: point.p75 - point.p25
-  }));
-
-  const districtShapes = useMemo(() => {
-    if (!enrichedGeojson) return [];
-    return enrichedGeojson.features.map((feature) => {
-      const name = String((feature.properties as { name?: string } | null)?.name ?? "");
-      const market = districtByName.get(name);
-      const coordinates = feature.geometry.type === "Polygon" ? feature.geometry.coordinates : [];
-      const flat = coordinates.flat();
-      const center = flat.reduce(
-        (acc, point) => {
-          acc[0] += point[0];
-          acc[1] += point[1];
-          return acc;
-        },
-        [0, 0]
-      );
-      const projected = flat.length ? projectPoint([center[0] / flat.length, center[1] / flat.length]) : [0, 0];
-      return {
-        id: market?.id ?? name,
-        name,
-        market,
-        path: polygonPath(coordinates),
-        ratio: market ? market.rentPerM2 / market.pricePerM2 : 0,
-        label: projected
-      };
-    });
-  }, [enrichedGeojson]);
-
-  const activeShape = districtShapes.find((shape) => shape.id === (hoveredId ?? selectedId));
-  const appreciationHint = `Zakres dla segmentu ${bandLabels[selected.band]}: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak jest bazowym założeniem, które model łączy z profilem dzielnicy.`;
-  const comparisonData = [
-    {
-      name: selected.name,
-      price: selected.pricePerM2,
-      rent: selected.rentPerM2,
-      ratio: Math.round((selected.rentPerM2 / selected.pricePerM2) * 10000) / 100,
-      breakEven: result?.summary.breakEvenMedian ?? 0
-    },
-    ...(compare
-      ? [
-          {
-            name: compare.name,
-            price: compare.pricePerM2,
-            rent: compare.rentPerM2,
-            ratio: Math.round((compare.rentPerM2 / compare.pricePerM2) * 10000) / 100,
-            breakEven: result?.compareSummary?.breakEvenMedian ?? 0
-          }
-        ]
-      : [])
-  ];
-
-  return (
-    <main ref={reportRef} className="dashboard app-dashboard">
-      <aside className="sidebar">
-        <div className="brand-mark">W</div>
-        <nav>
-          <NavItem icon={<Grid2X2 size={22} />} label="Przegląd" />
-          <NavItem icon={<BarChart3 size={22} />} label="Porównanie" active />
-          <NavItem icon={<Heart size={22} />} label="Zapisane" disabled />
-          <NavItem icon={<Bell size={22} />} label="Alerty" disabled />
-          <NavItem icon={<FileText size={22} />} label="Raporty" disabled />
-          <NavItem icon={<BookOpen size={22} />} label="Wiedza" disabled />
-        </nav>
-        <span className="locale" aria-label="Język interfejsu: polski">
-          PL
-        </span>
-      </aside>
-
-      <section className="workspace">
-        <header className="topbar">
-          <div className="product-title">
-            <div className="brand-mark small">W</div>
+        <div className="hero-product" aria-label="Podgląd kalkulatora">
+          <span className="preview-context">Przykładowe porównanie</span>
+          <div className="hero-product-top">
             <div>
-              <h1>Warszawa: wynajem czy zakup</h1>
-              <p>Szacunkowy model dzielnicowy · aktualizacja: {dataLastUpdated}</p>
+              <span>Dzielnica</span>
+              <strong>Mokotów</strong>
             </div>
+            <small>Dla pary</small>
           </div>
-          <label className="scenario-select">
-            <span>Scenariusz</span>
-            <select value={settings.scenario} onChange={(event) => applyScenario(event.target.value as ScenarioKey)}>
-              {(Object.entries(scenarios) as Array<[ScenarioKey, (typeof scenarios)[ScenarioKey]]>).map(([key, scenario]) => (
-                <option key={key} value={key}>
-                  {scenario.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={16} />
-          </label>
-          <button className="ghost-action" type="button" onClick={() => setCompareId(compareId ? null : "srodmiescie")}>
-            <Plus size={18} />
-            Porównaj dzielnice
-          </button>
-          <div className="topbar-actions">
-            <button className="ghost-action compact" type="button" onClick={share}>
-              <Share2 size={18} />
-              Udostępnij
-            </button>
-            <button className="primary-action" type="button" onClick={exportPdf}>
-              <Download size={18} />
-              Eksportuj PDF
-            </button>
-            <button className="avatar" type="button">
-              AC
-            </button>
-          </div>
-          {actionMessage ? <p className="action-feedback" role="status">{actionMessage}</p> : null}
-        </header>
-
-        <section className="mvp-intro surface">
-          <div>
-            <span>Publiczne MVP</span>
-            <h2>Sprawdź, czy w wybranej dzielnicy bardziej opłaca się najem czy zakup.</h2>
-            <p>
-              Narzędzie pomaga osobom kupującym pierwsze mieszkanie, parom, rodzinom i inwestorom porównać koszty kredytu,
-              najmu oraz alternatywnego inwestowania różnicy. Zacznij od wyboru dzielnicy i scenariusza, a potem dostosuj
-              założenia do swojej sytuacji.
-            </p>
-          </div>
-          <p className="mvp-disclaimer">{mvpDisclaimer}</p>
-        </section>
-
-        <section className="content-grid">
-          <aside className="map-card surface">
-            <header>
+          <div className="preview-grid">
+            <div className="preview-map">
+              <span className="map-dot one">Śródmieście</span>
+              <span className="map-dot two">Wola</span>
+              <span className="map-dot three">Mokotów</span>
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+            <div className="preview-metrics">
               <div>
-                <h2>Wybierz dzielnice do porównania</h2>
-                <p>Wybierz maksymalnie 2 dzielnice dla aktualnego modelu.</p>
-              </div>
-              <button type="button" className="icon-button" onClick={() => setCompareId(compareId ? null : "zoliborz")}>
-                <Plus size={20} />
-              </button>
-            </header>
-
-            <div className="map-stage">
-              <div ref={mapContainer} className="map" />
-              <svg
-                className="district-svg"
-                viewBox={`0 0 ${svgBounds.width} ${svgBounds.height}`}
-                preserveAspectRatio="xMidYMid meet"
-                role="img"
-                aria-label="Mapa dzielnic Warszawy według relacji najmu do ceny"
-              >
-                <g>
-                  {districtShapes.map((shape) => (
-                    <path
-                      key={shape.id}
-                      d={shape.path}
-                      data-district={shape.id}
-                      fill={ratioColor(shape.ratio)}
-                      className={`${shape.id === selectedId ? "selected" : ""} ${shape.id === hoveredId ? "hovered" : ""} ${shape.id === compareId ? "compared" : ""}`}
-                      onMouseEnter={() => setHoveredId(shape.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      onClick={() => setSelectedId(shape.id)}
-                    />
-                  ))}
-                </g>
-                <g className="district-label-layer">
-                  {districtShapes.map((shape) => (
-                    <text key={`${shape.id}-label`} x={shape.label[0]} y={shape.label[1]} className={shape.id === selectedId ? "selected" : ""}>
-                      {shape.name}
-                    </text>
-                  ))}
-                </g>
-                <g className="selection-markers">
-                  {activeShape ? (
-                    <>
-                      <circle cx={activeShape.label[0]} cy={activeShape.label[1] - 32} r="23" />
-                      <text x={activeShape.label[0]} y={activeShape.label[1] - 26}>
-                        {activeShape.id === selectedId ? "1" : "i"}
-                      </text>
-                    </>
-                  ) : null}
-                  {compare
-                    ? districtShapes
-                        .filter((shape) => shape.id === compare.id)
-                        .map((shape) => (
-                          <g key={`${shape.id}-compare`}>
-                            <circle cx={shape.label[0]} cy={shape.label[1] - 32} r="21" className="compare-marker" />
-                            <text x={shape.label[0]} y={shape.label[1] - 26}>
-                              2
-                            </text>
-                          </g>
-                        ))
-                    : null}
-                </g>
-              </svg>
-              {activeShape?.market ? (
-                <motion.div className="map-popover" key={activeShape.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                  <span>{activeShape.id === selectedId ? "Wybrana dzielnica" : "Podgląd dzielnicy"}</span>
-                  <strong>{activeShape.name}</strong>
-                  <small>
-                    {money.format(activeShape.market.pricePerM2)}/m² · najem {money.format(activeShape.market.rentPerM2)}/m²
-                  </small>
-                </motion.div>
-              ) : null}
-            </div>
-
-            <div className="map-legend">
-              <span>Relacja najmu do ceny</span>
-              <div />
-              <small>niższa</small>
-              <small>wyższa</small>
-            </div>
-
-            <div className="district-search">
-              <Search size={18} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Szukaj dzielnicy" />
-            </div>
-
-            <div className="district-list">
-              {filteredDistricts.slice(0, 8).map((district, index) => {
-                const active = district.id === selectedId;
-                const compared = district.id === compareId;
-                return (
-                  <button key={district.id} className={active || compared ? "active" : ""} type="button" onClick={() => setSelectedId(district.id)}>
-                    <span className="check">{active ? "1" : compared ? "2" : "+"}</span>
-                    <strong>{district.name}</strong>
-                    <small>{percent(district.rentPerM2 / district.pricePerM2)}</small>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="compare-picker">
-              <select value={compareId ?? ""} onChange={(event) => setCompareId(event.target.value || null)}>
-                <option value="">Dodaj dzielnicę do porównania</option>
-                {districts
-                  .filter((district) => district.id !== selectedId)
-                  .map((district) => (
-                    <option key={district.id} value={district.id}>
-                      {district.name}
-                    </option>
-                  ))}
-              </select>
-              <span>{selectedDistricts.length} / 2 wybrane</span>
-            </div>
-          </aside>
-
-          <section className="analysis-area">
-            <div className="analysis-header">
-              <div>
-                <h2>Porównanie dzielnic</h2>
-                <p>Analiza najmu i zakupu dla wybranych warszawskich dzielnic.</p>
+                <span>Kiedy zakup się broni</span>
+                <strong>11 lat</strong>
               </div>
               <div>
-                <button className="ghost-action compact" disabled title="Porównanie scenariuszy jest planowane po publicznym MVP" type="button">
-                  <Sparkles size={18} />
-                  Porównaj scenariusze
-                  <span className="soon-pill">Wkrótce</span>
-                </button>
-                <button className="primary-action" type="button" onClick={exportPdf}>
-                  <FileText size={18} />
-                  Pełny raport porównania
-                </button>
+                <span>Roczny najem względem ceny</span>
+                <strong>5,18%</strong>
+              </div>
+              <div>
+                <span>Zakup ma przewagę w symulacji</span>
+                <strong>58%</strong>
               </div>
             </div>
+          </div>
+          <div className="preview-chart">
+            <span />
+            <span />
+            <span />
+            <svg viewBox="0 0 520 130" role="img" aria-label="Podgląd symulacji Monte Carlo">
+              <path d="M8 88 C80 72 110 70 165 66 C225 61 282 38 338 53 C405 72 443 25 512 18" />
+              <path d="M8 94 C92 92 132 75 190 80 C264 86 319 61 365 70 C430 82 461 54 512 48" />
+              <path d="M8 104 C98 84 154 106 219 83 C286 59 332 88 398 62 C446 43 482 38 512 31" />
+            </svg>
+          </div>
+        </div>
+      </section>
 
-            <div className="district-card-grid">
-              <DistrictCard district={selected} summary={result?.summary} selected index={1} />
-              {compare ? <DistrictCard district={compare} summary={result?.compareSummary} selected={false} index={2} /> : null}
-              {!compare ? (
-                <article className="district-card empty">
-                  <Plus size={28} />
-                  <h3>Dodaj drugą dzielnicę</h3>
-                  <p>Porównaj cenę, najem, moment opłacalności i wrażliwość założeń.</p>
-                </article>
-              ) : null}
+      <section className="landing-band outcome-band" id="efekt">
+        <div className="section-heading">
+          <span>Co pokaże kalkulator?</span>
+          <h2>Porównanie, które pomaga spokojnie porozmawiać o mieszkaniu, kredycie i najmie.</h2>
+          <p>
+            W jednym miejscu zbierasz lokalizację, metraż, kredyt, czynsz najmu, koszty utrzymania i inwestowanie
+            oszczędności poza mieszkaniem.
+          </p>
+        </div>
+        <div className="outcome-grid">
+          {outcomeItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article className="outcome-card" key={item.title}>
+                <span className="outcome-icon">
+                  <Icon size={20} />
+                </span>
+                <h3>{item.title}</h3>
+                <p>{item.copy}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="problem" className="landing-band problem-band">
+        <div className="section-heading">
+          <span>Co utrudnia decyzję</span>
+          <h2>To nie jest tylko porównanie raty i czynszu.</h2>
+        </div>
+        <div className="problem-grid">
+          <article>
+            <strong>Wysokie ceny zakupu</strong>
+            <p>Cena za metr i wkład własny mocno zmieniają próg wejścia, szczególnie w centralnych dzielnicach.</p>
+          </article>
+          <article>
+            <strong>Stopy i koszt kredytu</strong>
+            <p>Rata, refinansowanie i rodzaj oprocentowania potrafią zmienić wynik bardziej niż sama cena mieszkania.</p>
+          </article>
+          <article>
+            <strong>Wzrost najmu</strong>
+            <p>Rosnące czynsze mogą przybliżać próg opłacalności zakupu, ale dużo zależy od tego, jak długo chcesz zostać w mieszkaniu.</p>
+          </article>
+          <article>
+            <strong>Co robisz z wkładem własnym</strong>
+            <p>Wkład własny możesz włożyć w mieszkanie albo inwestować. Kalkulator pokazuje, jak ta decyzja zmienia wynik po latach.</p>
+          </article>
+          <article>
+            <strong>Niepewny wzrost wartości</strong>
+            <p>Wartość mieszkania nie rośnie równo co roku, dlatego symulacja pokazuje zakres wyników, a nie jedną obietnicę.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-band how-band">
+        <div className="section-heading">
+          <span>Jak to działa</span>
+          <h2>Od dzielnicy do porównania bez długiego liczenia.</h2>
+        </div>
+        <div className="steps-grid">
+          {steps.map((step) => (
+            <article key={step.eyebrow} className="step-card">
+              <span>{step.eyebrow}</span>
+              <h3>{step.title}</h3>
+              <p>{step.copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="model" className="landing-band model-band">
+        <div className="section-heading">
+          <span>Co bierzemy pod uwagę</span>
+          <h2>Nie tylko rata kredytu. Także koszty utrzymania, wkład własny i czas.</h2>
+        </div>
+        <div className="model-grid">
+          {modelItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article key={item.label} className="model-card">
+                <Icon size={21} />
+                <strong>{item.label}</strong>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="landing-band methodology-section" id="metodologia">
+        <div className="section-heading compact">
+          <span>Jak liczymy wynik</span>
+          <h2>Porównujemy dwa sposoby wykorzystania tych samych pieniędzy.</h2>
+          <p>
+            Nie sprawdzamy tylko, czy rata jest wyższa od czynszu. Liczymy też wkład własny, koszty utrzymania mieszkania
+            i to, co mogłoby się stać z oszczędnościami poza zakupem.
+          </p>
+        </div>
+        <div className="methodology-card">
+          {methodologyPoints.map((point, index) => (
+            <div className="methodology-point" key={point}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <p>{point}</p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <div className="insight-strip">
-              <div className="break-even-hero">
-                <span>Zakup zaczyna wygrywać po</span>
-                <strong>{formatYear(result?.summary.breakEvenMedian ?? null)}</strong>
-                <small>
-                  Przedział 95%: {formatYear(result?.summary.breakEvenLow ?? null)} - {formatYear(result?.summary.breakEvenHigh ?? null)}
-                </small>
-                <i className={isRunning ? "pulse" : ""}>
-                  {isRunning ? "Symulacja trwa" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% szans przewagi zakupu`}
-                </i>
-              </div>
-              <div className="assumption-card">
-                <span>Szacunkowe dane rynkowe</span>
-                <strong>{selected.name}</strong>
-                <p>{selected.note}</p>
-                <div>
-                  <b>{money.format(result?.summary.purchasePrice ?? selected.pricePerM2 * settings.areaM2)}</b>
-                  <small>szacunkowa cena zakupu</small>
-                </div>
-              </div>
-            </div>
+      <section id="zaufanie" className="trust-section">
+        <div className="trust-copy">
+          <span>Ważne założenia</span>
+          <h2>Widać, co liczymy. Bez obietnic.</h2>
+        </div>
+        <div className="trust-grid">
+          {trustItems.map((item) => (
+            <article className="trust-card" key={item.title}>
+              <ShieldCheck size={20} />
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-            <div className="chart-grid">
-              <section className="surface chart-card tall">
-                <div className="section-title">
-                  <BarChart3 size={18} />
-                  <h3>Monte Carlo: różnica majątku</h3>
-                </div>
-                <ResponsiveContainer width="100%" height={245}>
-                  <LineChart margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 8" stroke="rgba(14, 24, 56, 0.1)" />
-                    <XAxis dataKey="year" type="number" domain={[1, 30]} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} width={48} />
-                    <Tooltip formatter={(value) => money.format(Number(value))} labelFormatter={(label) => `Rok ${label}`} />
-                    <ReferenceLine y={0} stroke="#1a2b68" strokeDasharray="4 4" />
-                    {result?.paths.map((path, index) => (
-                      <Line
-                        key={index}
-                        data={path}
-                        type="monotone"
-                        dataKey="value"
-                        dot={false}
-                        stroke={index % 3 === 0 ? "#3157ff" : "#8d54ff"}
-                        strokeOpacity={0.11}
-                        strokeWidth={1}
-                        isAnimationActive
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </section>
-
-              <section className="surface chart-card">
-                <div className="section-title">
-                  <SlidersHorizontal size={18} />
-                  <h3>Zakres wrażliwości</h3>
-                </div>
-                <ResponsiveContainer width="100%" height={245}>
-                  <AreaChart data={chartData} margin={{ top: 10, right: 8, bottom: 0, left: 0 }}>
-                    <XAxis dataKey="year" tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`} tickLine={false} axisLine={false} width={48} />
-                    <Tooltip formatter={(value) => money.format(Number(value))} />
-                    <Area dataKey="floor95" stackId="95" stroke="none" fill="transparent" isAnimationActive />
-                    <Area dataKey="band95" stackId="95" stroke="none" fill="#9ab5ff" fillOpacity={0.28} isAnimationActive />
-                    <Area dataKey="floor50" stackId="50" stroke="none" fill="transparent" isAnimationActive />
-                    <Area dataKey="band50" stackId="50" stroke="none" fill="#7b4dff" fillOpacity={0.28} isAnimationActive />
-                    <Line type="monotone" dataKey="p50" stroke="#3157ff" dot={false} strokeWidth={2.4} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </section>
-
-              <section className="surface chart-card">
-                <div className="section-title">
-                  <TrendingUp size={18} />
-                  <h3>Porównanie cen / m²</h3>
-                </div>
-                <ResponsiveContainer width="100%" height={245}>
-                  <BarChart data={comparisonData} layout="vertical" margin={{ top: 8, right: 22, bottom: 0, left: 34 }}>
-                    <CartesianGrid strokeDasharray="3 8" horizontal={false} stroke="rgba(14, 24, 56, 0.1)" />
-                    <XAxis type="number" tickLine={false} axisLine={false} />
-                    <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={92} />
-                    <Tooltip formatter={(value) => money.format(Number(value))} />
-                    <Bar dataKey="price" name="Cena / m²" radius={[0, 8, 8, 0]}>
-                      {comparisonData.map((entry, index) => (
-                        <Cell key={entry.name} fill={index === 0 ? "#3157ff" : "#8d54ff"} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </section>
-            </div>
-
-            <div className="bottom-grid">
-              <section className="surface controls-card">
-                <div className="section-title">
-                  <SlidersHorizontal size={18} />
-                  <h3>Założenia modelu</h3>
-                </div>
-                <div className="controls compact-controls">
-                  <Slider label="Planowany czas mieszkania" value={settings.yearsInHome} min={1} max={30} step={1} format={(value) => `${value} lat`} onChange={(value) => updateSetting("yearsInHome", value)} />
-                  <Slider label="Powierzchnia mieszkania" value={settings.areaM2} min={25} max={110} step={1} format={(value) => `${value} m²`} onChange={(value) => updateSetting("areaM2", value)} />
-                  <Slider label="Oprocentowanie kredytu" value={settings.mortgageRate} min={0.025} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("mortgageRate", value)} />
-                  <Slider label="Wkład własny" value={settings.downPayment} min={0.1} max={0.6} step={0.01} format={percent} onChange={(value) => updateSetting("downPayment", value)} />
-                  <Slider
-                    label="Bazowy wzrost wartości mieszkania"
-                    value={settings.homeAppreciation}
-                    min={-0.01}
-                    max={0.09}
-                    step={0.001}
-                    format={percent}
-                    hint={appreciationHint}
-                    onChange={(value) => updateSetting("homeAppreciation", value)}
-                  />
-                  <Slider label="Wzrost czynszu najmu" value={settings.rentGrowth} min={0} max={0.1} step={0.001} format={percent} onChange={(value) => updateSetting("rentGrowth", value)} />
-                  <Slider label="Zwrot z inwestycji" value={settings.investmentReturn} min={0.005} max={0.105} step={0.001} format={percent} onChange={(value) => updateSetting("investmentReturn", value)} />
-                  <Slider label="Inflacja" value={settings.inflation} min={0.005} max={0.085} step={0.001} format={percent} onChange={(value) => updateSetting("inflation", value)} />
-                </div>
-              </section>
-
-              <section className="surface settings-card">
-                <div className="section-title">
-                  <Home size={18} />
-                  <h3>Opcje kredytu</h3>
-                </div>
-                <div className="switches">
-                  <Toggle label="Stałe oprocentowanie" checked={settings.mortgageType === "fixed"} onChange={(value) => updateSetting("mortgageType", value ? "fixed" : "variable")} />
-                  <Toggle label="Refinansowanie" checked={settings.refinancing} onChange={(value) => updateSetting("refinancing", value)} />
-                  <Toggle label="Rynek wtórny i PCC" checked={settings.secondaryMarket} onChange={(value) => updateSetting("secondaryMarket", value)} />
-                </div>
-                <div className="source-note">
-                  <MapPin size={17} />
-                  <p>{dataSourceNote}</p>
-                </div>
-              </section>
-            </div>
-          </section>
-        </section>
+      <section className="final-cta">
+        <span>Zacznij od jednej dzielnicy</span>
+        <h2>Zobacz wynik dla swojej dzielnicy.</h2>
+        <p>Wybierz lokalizację, ustaw własne liczby i zobacz, jak zmienia się wynik.</p>
+        <Link className="landing-primary" href="/kalkulator">
+          Otwórz kalkulator
+          <ArrowRight size={18} />
+        </Link>
       </section>
     </main>
   );

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Warszawa: wynajem czy zakup",
-  description: "Interaktywny kalkulator najmu i zakupu mieszkania w warszawskich dzielnicach"
+  title: "Warsaw Home Compass",
+  description: "Porównaj najem i zakup mieszkania w Warszawie na własnych założeniach."
 };
 
 export default function RootLayout({

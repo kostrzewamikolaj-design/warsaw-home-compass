@@ -1,30 +1,34 @@
-# Warsaw Rent vs Buy
+# Warsaw Home Compass
 
-Warsaw Rent vs Buy is an interactive frontend MVP for comparing the financial trade-offs between renting and buying an apartment in Warsaw districts.
+Warsaw Home Compass is a Polish public MVP for comparing whether renting or buying an apartment may be financially better in Warsaw districts. It is a frontend-only decision-support product: the landing page explains the tool, and the calculator lets users test district, mortgage, rent-growth and investment-return assumptions.
 
-The current app is a public-demo-ready dashboard, not a production-grade financial product. It uses static local assumptions for district prices, rents, appreciation bands and financing inputs. Results should be treated as educational estimates only.
+The project is educational and pre-production. It uses static estimated market assumptions and should not be treated as financial, mortgage, legal or investment advice.
+
+## Routes
+
+- `/` - Polish landing page for first-time visitors.
+- `/kalkulator` - interactive rent-versus-buy dashboard and calculator.
+
+## Current MVP Features
+
+- Warsaw district selection and side-by-side comparison.
+- District SVG layer with Mapbox/CARTO base-map support when a public Mapbox token is provided.
+- Scenario presets for single buyer, couple, family and rental investor.
+- Adjustable assumptions for mortgage rate, down payment, apartment size, appreciation, rent growth, investment return and inflation.
+- 30-year Monte Carlo simulation running in a Web Worker.
+- Break-even estimate, confidence interval, wealth-difference chart and sensitivity view.
+- Shareable URL hash state.
+- Browser-side PDF export using `html2canvas` and `jsPDF`.
+- Polish interface copy, intro, estimated-data note and MVP disclaimer.
+- Responsive layouts for landing page and calculator.
 
 ## Tech Stack
 
 - Next.js, React and TypeScript
-- Mapbox GL JS with a CARTO Positron basemap
-- Recharts for charts
+- Mapbox GL JS with CARTO Positron styling when `NEXT_PUBLIC_MAPBOX_TOKEN` is available
+- Recharts for dashboard charts
 - Web Worker for Monte Carlo simulation
-- `html2canvas` and `jsPDF` for browser-side PDF export
-
-Note: the original repository was a React/TanStack/Vite app. This PR branch currently contains a Next.js implementation and should be reviewed as a stack change before merging.
-
-## Main Features
-
-- Warsaw district choropleth colored by rent-to-price ratio
-- District selection and side-by-side comparison
-- Scenario presets for single buyer, couple, family and rental investor
-- Adjustable model assumptions for mortgage rate, down payment, rent growth, investment return, inflation and appreciation baseline
-- 30-year Monte Carlo simulation with break-even estimate and confidence interval
-- Sensitivity ribbon and Monte Carlo path visualization
-- Shareable URL hash state
-- Browser-side PDF export
-- Responsive dashboard layout for desktop and mobile
+- `html2canvas` and `jsPDF` for client-side PDF export
 
 ## Install
 
@@ -40,21 +44,24 @@ npm run dev
 
 Open the local URL printed by Next.js, usually `http://localhost:3000`.
 
-## Build
+Optional local environment variable:
 
 ```bash
+NEXT_PUBLIC_MAPBOX_TOKEN=your_public_token
+```
+
+Without a token, the calculator should still render the district SVG layer. The Mapbox base map may be unavailable.
+
+## Verify Locally
+
+```bash
+npm run typecheck
 npm run build
 ```
 
-## Type Check
+`npm run lint` currently runs the same TypeScript validation as `npm run typecheck`.
 
-```bash
-npm run lint
-```
-
-The current `lint` script runs TypeScript validation with `tsc --noEmit`. A dedicated ESLint setup can be added later.
-
-## Data
+## Data and Assumptions
 
 District geometry is stored in `public/data/warsaw-districts.geojson`.
 
@@ -64,17 +71,30 @@ To refresh geometry from OpenStreetMap:
 npm run fetch:districts
 ```
 
-Market assumptions are currently static and maintained in `src/lib/districts.ts` and `src/lib/model.ts`.
+Market assumptions are static and maintained in `src/lib/districts.ts` and `src/lib/model.ts`. They include estimated district purchase prices, rental rates, appreciation bands, scenario defaults, transaction costs, mortgage defaults and investment assumptions.
 
-## Current Limitations
+The data is not live market data, not official property valuation data, not bank pricing and not a complete legal or tax model.
 
-- District prices and rents are estimated static MVP inputs, not live market data.
-- The model is simplified and does not include every tax, legal, creditworthiness or liquidity factor.
-- Mortgage assumptions approximate fixed and variable rate behavior; they are not bank offers.
-- PDF export captures the current dashboard view in the browser and is not a polished reporting pipeline.
-- Saved analyses, alerts, reports and learning modules are not implemented yet.
-- There is no backend, authentication, database, billing or production data pipeline.
+## Intentionally Not Included Yet
+
+- Backend
+- Authentication or user accounts
+- Database
+- Payments, billing or subscriptions
+- Newsletter capture
+- Live real estate listings
+- Official property valuations
+- Bank-specific mortgage offers
+- Saved analyses across devices
+
+## Limitations
+
+- Prices and rents are estimated static MVP inputs.
+- Mortgage logic is simplified and does not replace a bank offer or creditworthiness check.
+- The model does not cover every tax, legal, liquidity, vacancy or transaction-timing factor.
+- PDF export captures the current browser dashboard and is not yet a production reporting pipeline.
+- Results are scenario estimates, not recommendations.
 
 ## Disclaimer
 
-This project is for educational and product validation purposes only. It is not financial, investment, legal, tax or mortgage advice. Users should verify assumptions independently and consult qualified professionals before making housing or investment decisions.
+Warsaw Home Compass is an educational MVP. It is not financial, credit, legal, tax, mortgage or investment advice. Users should verify assumptions independently and consult qualified professionals before making housing, credit or investment decisions.
