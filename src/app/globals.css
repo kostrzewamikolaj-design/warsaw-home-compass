@@ -271,6 +271,18 @@ a {
     transform 0.18s ease;
 }
 
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .landing-secondary {
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(43, 60, 111, 0.13);
@@ -1276,6 +1288,33 @@ a {
   stroke-width: 4.4;
 }
 
+.map-fallback-note {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(49, 87, 255, 0.18);
+  border-radius: 14px;
+  bottom: 16px;
+  box-shadow: 0 18px 34px rgba(25, 36, 84, 0.12);
+  color: var(--ink);
+  display: grid;
+  gap: 4px;
+  left: 16px;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 13px 15px;
+  position: absolute;
+  z-index: 5;
+}
+
+.map-fallback-note strong {
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.map-fallback-note span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
 .district-label-layer,
 .selection-markers {
   pointer-events: none;
@@ -1425,6 +1464,17 @@ a {
 .district-list button:hover,
 .district-list button.active {
   background: rgba(49, 87, 255, 0.08);
+}
+
+.district-list button:focus-visible,
+.compare-picker select:focus-visible,
+.district-search input:focus-visible,
+.icon-button:focus-visible,
+.avatar:focus-visible,
+.ghost-action:focus-visible,
+.primary-action:focus-visible {
+  outline: 3px solid rgba(49, 87, 255, 0.36);
+  outline-offset: 3px;
 }
 
 .check {

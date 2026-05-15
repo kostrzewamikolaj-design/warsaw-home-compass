@@ -130,6 +130,54 @@ const hashState = (districtId: string, compareId: string | null, settings: Setti
   return btoa(encodeURIComponent(payload));
 };
 
+const numericSettingRanges: Partial<Record<keyof Settings, [number, number]>> = {
+  areaM2: [25, 110],
+  yearsInHome: [1, 30],
+  mortgageRate: [0.025, 0.105],
+  downPayment: [0.1, 0.6],
+  originationFee: [0, 0.05],
+  notaryCost: [0, 0.03],
+  courtFees: [0, 5000],
+  hoaPerM2: [0, 60],
+  maintenanceReserve: [0, 0.05],
+  hoaEscalation: [0, 0.12],
+  insuranceAnnual: [0, 5000],
+  renovationAnnual: [0, 0.05],
+  homeAppreciation: [-0.01, 0.09],
+  rentGrowth: [0, 0.1],
+  investmentReturn: [0.005, 0.105],
+  inflation: [0.005, 0.085]
+};
+
+const isScenarioKey = (value: unknown): value is ScenarioKey => typeof value === "string" && value in scenarios;
+const mortgageTypes = new Set(["fixed", "variable"]);
+const investmentProfiles = new Set(["ETF", "Bonds", "Savings"]);
+
+const clampNumber = (value: unknown, fallback: number, [min, max]: [number, number]) => {
+  const numericValue = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.min(max, Math.max(min, numericValue));
+};
+
+const sanitizeRestoredSettings = (settings: Partial<Settings>, current: Settings): Settings => {
+  const next = { ...current };
+
+  if (isScenarioKey(settings.scenario)) next.scenario = settings.scenario;
+  if (typeof settings.mortgageType === "string" && mortgageTypes.has(settings.mortgageType)) next.mortgageType = settings.mortgageType as Settings["mortgageType"];
+  if (typeof settings.investmentProfile === "string" && investmentProfiles.has(settings.investmentProfile)) {
+    next.investmentProfile = settings.investmentProfile as Settings["investmentProfile"];
+  }
+  if (typeof settings.refinancing === "boolean") next.refinancing = settings.refinancing;
+  if (typeof settings.secondaryMarket === "boolean") next.secondaryMarket = settings.secondaryMarket;
+
+  (Object.entries(numericSettingRanges) as Array<[keyof Settings, [number, number]]>).forEach(([key, range]) => {
+    if (key in settings) {
+      next[key] = clampNumber(settings[key], current[key] as number, range) as never;
+    }
+  });
+
+  return next;
+};
+
 const parseHash = () => {
   if (typeof window === "undefined" || window.location.hash.length < 2) return null;
   try {
@@ -300,6 +348,7 @@ export default function Dashboard() {
   const [settings, setSettings] = useState<Settings>({ ...defaultSettings });
   const [simSettings, setSimSettings] = useState<Settings>({ ...defaultSettings });
   const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
+  const [geojsonFailed, setGeojsonFailed] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(true);
   const [query, setQuery] = useState("");
@@ -316,6 +365,20 @@ export default function Dashboard() {
   const compare = compareId ? districtById.get(compareId) ?? null : null;
   const selectedDistricts = [selected, compare].filter(Boolean) as DistrictMarket[];
 
+  const nextAvailableCompareId = useCallback(
+    (primaryId: string, preferredId = "zoliborz") => {
+      if (preferredId !== primaryId && districtById.has(preferredId)) return preferredId;
+      return districts.find((district) => district.id !== primaryId)?.id ?? null;
+    },
+    []
+  );
+
+  const selectDistrict = useCallback((districtId: string) => {
+    if (!districtById.has(districtId)) return;
+    setSelectedId(districtId);
+    setCompareId((current) => (current === districtId ? null : current));
+  }, []);
+
   useEffect(() => {
     const timer = window.setTimeout(() => setSimSettings(settings), 150);
     return () => window.clearTimeout(timer);
@@ -324,12 +387,20 @@ export default function Dashboard() {
   useEffect(() => {
     const restored = parseHash();
     if (!restored) return;
-    if (restored.districtId && districtById.has(restored.districtId)) {
-      setSelectedId(restored.districtId);
-    }
-    setCompareId(restored.compareId && districtById.has(restored.compareId) ? restored.compareId : null);
+    const nextSelectedId = restored.districtId && districtById.has(restored.districtId) ? restored.districtId : selectedId;
+    const nextCompareId =
+      restored.compareId === null
+        ? null
+        : restored.compareId && districtById.has(restored.compareId) && restored.compareId !== nextSelectedId
+          ? restored.compareId
+          : compareId !== nextSelectedId && compareId && districtById.has(compareId)
+            ? compareId
+            : null;
+
+    setSelectedId(nextSelectedId);
+    setCompareId(nextCompareId);
     if (restored.settings) {
-      setSettings((current) => ({ ...current, ...restored.settings }));
+      setSettings((current) => sanitizeRestoredSettings(restored.settings ?? {}, current));
     }
   }, []);
 
@@ -376,9 +447,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetch("/data/warsaw-districts.geojson")
-      .then((response) => response.json())
-      .then(setGeojson)
-      .catch(() => setGeojson(null));
+      .then((response) => {
+        if (!response.ok) throw new Error("District GeoJSON failed to load");
+        return response.json() as Promise<FeatureCollection>;
+      })
+      .then((data) => {
+        setGeojson(data);
+        setGeojsonFailed(false);
+      })
+      .catch(() => {
+        setGeojson(null);
+        setGeojsonFailed(true);
+      });
   }, []);
 
   useEffect(() => {
@@ -599,7 +679,7 @@ export default function Dashboard() {
             </select>
             <ChevronDown size={16} />
           </label>
-          <button className="ghost-action" type="button" onClick={() => setCompareId(compareId ? null : "srodmiescie")}>
+          <button className="ghost-action" type="button" onClick={() => setCompareId(compareId ? null : nextAvailableCompareId(selectedId, "srodmiescie"))}>
             <Plus size={18} />
             Dodaj dzielnicę
           </button>
@@ -612,7 +692,7 @@ export default function Dashboard() {
               <Download size={18} />
               Pobierz PDF
             </button>
-            <button className="avatar" type="button">
+            <button className="avatar" type="button" aria-label="Profil użytkownika">
               AC
             </button>
           </div>
@@ -651,12 +731,20 @@ export default function Dashboard() {
                 <h2>Wybierz dzielnice do porównania</h2>
                 <p>Możesz porównać maksymalnie 2 dzielnice naraz.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setCompareId(compareId ? null : "zoliborz")}>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={compareId ? "Usuń drugą dzielnicę z porównania" : "Dodaj drugą dzielnicę do porównania"}
+                onClick={() => setCompareId(compareId ? null : nextAvailableCompareId(selectedId))}
+              >
                 <Plus size={20} />
               </button>
             </header>
 
             <div className="map-stage">
+              <p id="district-map-accessible-note" className="sr-only">
+                Mapa obsługuje wybór myszą lub dotykiem. Pełny wybór dzielnic klawiaturą jest dostępny na liście pod mapą.
+              </p>
               <div ref={mapContainer} className="map" />
               <svg
                 className="district-svg"
@@ -664,6 +752,7 @@ export default function Dashboard() {
                 preserveAspectRatio="xMidYMid meet"
                 role="img"
                 aria-label="Mapa dzielnic Warszawy według relacji najmu do ceny"
+                aria-describedby="district-map-accessible-note"
               >
                 <g>
                   {districtShapes.map((shape) => (
@@ -675,7 +764,7 @@ export default function Dashboard() {
                       className={`${shape.districtId === selectedId ? "selected" : ""} ${shape.districtId === hoveredId ? "hovered" : ""} ${shape.districtId === compareId ? "compared" : ""}`}
                       onMouseEnter={() => setHoveredId(shape.districtId)}
                       onMouseLeave={() => setHoveredId(null)}
-                      onClick={() => setSelectedId(shape.districtId)}
+                      onClick={() => selectDistrict(shape.districtId)}
                     />
                   ))}
                 </g>
@@ -724,6 +813,12 @@ export default function Dashboard() {
                   </small>
                 </motion.div>
               ) : null}
+              {geojsonFailed ? (
+                <div className="map-fallback-note" role="status">
+                  <strong>Mapa dzielnic chwilowo się nie wczytała.</strong>
+                  <span>Wybór dzielnicy nadal działa z listy poniżej.</span>
+                </div>
+              ) : null}
             </div>
 
             <div className="map-legend">
@@ -735,15 +830,28 @@ export default function Dashboard() {
 
             <div className="district-search">
               <Search size={18} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Szukaj dzielnicy" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Szukaj dzielnicy" aria-label="Szukaj dzielnicy" />
             </div>
 
-            <div className="district-list">
+            <div className="district-list" role="group" aria-label="Klawiaturowa lista wyboru dzielnic">
               {filteredDistricts.slice(0, 8).map((district, index) => {
                 const active = district.id === selectedId;
                 const compared = district.id === compareId;
                 return (
-                  <button key={district.id} className={active || compared ? "active" : ""} type="button" onClick={() => setSelectedId(district.id)}>
+                  <button
+                    key={district.id}
+                    className={active || compared ? "active" : ""}
+                    type="button"
+                    aria-pressed={active}
+                    aria-label={`Wybierz dzielnicę ${district.name}${compared ? " jako główną i usuń ją z porównania" : ""}`}
+                    onClick={() => selectDistrict(district.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " " || event.key === "Space" || event.key === "Spacebar") {
+                        event.preventDefault();
+                        selectDistrict(district.id);
+                      }
+                    }}
+                  >
                     <span className="check">{active ? "1" : compared ? "2" : "+"}</span>
                     <strong>{district.name}</strong>
                     <small>{percent(district.rentPerM2 / district.pricePerM2)}</small>
@@ -753,7 +861,14 @@ export default function Dashboard() {
             </div>
 
             <div className="compare-picker">
-              <select value={compareId ?? ""} onChange={(event) => setCompareId(event.target.value || null)}>
+              <select
+                value={compareId ?? ""}
+                aria-label="Wybierz drugą dzielnicę do porównania"
+                onChange={(event) => {
+                  const nextCompareId = event.target.value;
+                  setCompareId(nextCompareId && nextCompareId !== selectedId && districtById.has(nextCompareId) ? nextCompareId : null);
+                }}
+              >
                 <option value="">Wybierz drugą dzielnicę</option>
                 {districts
                   .filter((district) => district.id !== selectedId)

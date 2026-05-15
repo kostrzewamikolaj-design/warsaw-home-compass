@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-15 - Pre-merge calculator polish fixes
+
+- Prevented duplicate primary/comparison district cards, hardened shared hash restoration, improved district-selection accessibility and added a visible map data-load fallback.
+
 ## 2026-05-15 - Lightweight motion polish
 
 - Added subtle transform-and-opacity motion for landing section reveals, hero preview polish, card hover states and calculator action feedback while preserving formulas and chart performance.
