@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Warsaw Home Compass",
-  description: "Narzędzie do porównania najmu i zakupu mieszkania w Warszawie."
+  description: "Porównaj najem i zakup mieszkania w Warszawie na własnych założeniach."
 };
 
 export default function RootLayout({

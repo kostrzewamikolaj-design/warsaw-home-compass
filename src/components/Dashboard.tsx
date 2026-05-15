@@ -110,18 +110,18 @@ const normalizedKeyPart = (value: string) =>
     .replace(/^-|-$/g, "")
     .toLowerCase();
 
-const formatYear = (value: number | null) => (value === null ? "Brak momentu opłacalności" : `${number.format(value)} lat`);
+const formatYear = (value: number | null) => (value === null ? "Brak progu" : `${number.format(value)} lat`);
 
 const bandLabels = {
   Premium: "najdroższe dzielnice",
-  Stable: "stabilny",
+  Stable: "stabilne dzielnice",
   Growth: "szybszy wzrost",
   Emerging: "tańszy start",
   "Outer value": "poza centrum"
 } as const;
 
 const mvpDisclaimer =
-  "To edukacyjne MVP oparte na statycznych, szacunkowych danych. Nie jest poradą finansową, kredytową, prawną ani inwestycyjną. Przed decyzją sprawdź aktualne oferty, warunki kredytu i własne założenia.";
+  "To narzędzie opiera się na statycznych, szacunkowych danych. Nie jest poradą finansową, kredytową, prawną ani inwestycyjną. Przed decyzją sprawdź aktualne oferty, warunki kredytu i własne założenia.";
 const simulationPathCount = 560;
 const chartPreviewPathCount = 36;
 
@@ -331,11 +331,11 @@ function DistrictCard({
       </header>
       <div className="district-metrics">
         <MetricTile label="Cena za m²" value={`${number.format(district.pricePerM2)} zł`} delta="szacunek" accent="blue" />
-        <MetricTile label="Najem za m² / mies." value={`${number.format(district.rentPerM2)} zł`} delta="stawka najmu" accent="teal" />
-        <MetricTile label="Najem / cena" value={percent(ratio)} delta={bandLabels[district.band]} accent="violet" />
-        <MetricTile label="Moment opłacalności" value={formatYear(summary?.breakEvenMedian ?? null)} delta="środek symulacji" accent="blue" />
-        <MetricTile label="Zakup wypada lepiej" value={`${Math.round((summary?.buyWinsAtHorizon ?? 0) * 100)}%`} delta="w wybranym czasie" accent="teal" />
-        <MetricTile label="Wynik po latach" value={money.format(summary?.finalMedianDelta ?? 0)} delta="zakup minus najem" accent="violet" />
+        <MetricTile label="Najem za m² miesięcznie" value={`${number.format(district.rentPerM2)} zł`} delta="stawka najmu" accent="teal" />
+        <MetricTile label="Miesięczny najem względem ceny" value={percent(ratio)} delta={bandLabels[district.band]} accent="violet" />
+        <MetricTile label="Kiedy zakup się broni" value={formatYear(summary?.breakEvenMedian ?? null)} delta="środkowy wynik" accent="blue" />
+        <MetricTile label="Zakup ma przewagę" value={`${Math.round((summary?.buyWinsAtHorizon ?? 0) * 100)}%`} delta="w tym okresie" accent="teal" />
+        <MetricTile label="Różnica po latach" value={money.format(summary?.finalMedianDelta ?? 0)} delta="zakup minus najem" accent="violet" />
       </div>
     </motion.article>
   );
@@ -538,7 +538,7 @@ export default function Dashboard() {
   const share = async () => {
     const hash = hashState(selectedId, compareId, settings);
     const url = `${window.location.origin}${window.location.pathname}#${hash}`;
-    const fallbackMessage = "Link jest gotowy w pasku adresu.";
+    const fallbackMessage = "Link jest w pasku adresu.";
     window.sessionStorage.setItem("dashboard-action-message", fallbackMessage);
     window.history.replaceState(window.history.state, "", `#${hash}`);
     flashActionMessage(fallbackMessage);
@@ -549,14 +549,14 @@ export default function Dashboard() {
         navigator.clipboard.writeText(url),
         new Promise((_, reject) => window.setTimeout(() => reject(new Error("Clipboard timeout")), 1200))
       ])
-        .then(() => flashActionMessage("Link został skopiowany."))
+        .then(() => flashActionMessage("Link skopiowany."))
         .catch(() => undefined);
     }
   };
 
   const exportPdf = async () => {
     if (!reportRef.current) return;
-    flashActionMessage("Przygotowuję plik PDF...", 12000);
+    flashActionMessage("Przygotowuję PDF...", 12000);
     try {
       await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
       const canvas = await html2canvas(reportRef.current, { backgroundColor: "#f7f9ff", scale: 1.35 });
@@ -564,9 +564,9 @@ export default function Dashboard() {
       const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
       pdf.addImage(image, "PNG", 0, 0, canvas.width, canvas.height);
       pdf.save(`warszawa-najem-czy-zakup-${selected.id}.pdf`);
-      flashActionMessage("Plik PDF jest gotowy.");
+      flashActionMessage("PDF jest gotowy.");
     } catch {
-      flashActionMessage("Nie udało się wygenerować PDF. Spróbuj ponownie.");
+      flashActionMessage("Nie udało się przygotować PDF. Spróbuj ponownie.");
     }
   };
 
@@ -616,7 +616,7 @@ export default function Dashboard() {
   }, [enrichedGeojson]);
 
   const activeShape = districtShapes.find((shape) => shape.districtId === (hoveredId ?? selectedId));
-  const appreciationHint = `Typowy zakres dla tej grupy dzielnic: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak pozwala sprawdzić spokojniejszy lub bardziej optymistyczny wariant.`;
+  const appreciationHint = `Typowy zakres dla tej grupy dzielnic: ${percent(selected.appreciationRange[0])}-${percent(selected.appreciationRange[1])} rocznie. Suwak pozwala sprawdzić ostrożniejszy lub bardziej optymistyczny wariant.`;
   const comparisonData = useMemo(
     () => [
       {
@@ -669,7 +669,7 @@ export default function Dashboard() {
             </div>
           </div>
           <label className="scenario-select">
-            <span>Profil</span>
+            <span>Sytuacja</span>
             <select value={settings.scenario} onChange={(event) => applyScenario(event.target.value as ScenarioKey)}>
               {(Object.entries(scenarios) as Array<[ScenarioKey, (typeof scenarios)[ScenarioKey]]>).map(([key, scenario]) => (
                 <option key={key} value={key}>
@@ -684,11 +684,11 @@ export default function Dashboard() {
             Dodaj dzielnicę
           </button>
           <div className="topbar-actions">
-            <button className="ghost-action compact action-with-feedback" data-feedback="Link jest gotowy w pasku adresu." type="button" onClick={share}>
+            <button className="ghost-action compact action-with-feedback" data-feedback="Link jest w pasku adresu." type="button" onClick={share}>
               <Share2 size={18} />
               Udostępnij
             </button>
-            <button className="primary-action action-with-feedback" data-feedback="Przygotowuję plik PDF..." type="button" onClick={exportPdf}>
+            <button className="primary-action action-with-feedback" data-feedback="Przygotowuję PDF..." type="button" onClick={exportPdf}>
               <Download size={18} />
               Pobierz PDF
             </button>
@@ -714,11 +714,11 @@ export default function Dashboard() {
 
         <section className="mvp-intro surface">
           <div>
-            <span>Edukacyjne MVP</span>
-            <h2>Sprawdź, który wariant lepiej wygląda w wybranej dzielnicy: najem czy zakup.</h2>
+            <span>Kalkulator orientacyjny</span>
+            <h2>Zobacz, który wybór może mieć więcej sensu: najem czy zakup.</h2>
             <p>
-              Porównaj ratę kredytu, koszty najmu i inwestowanie pieniędzy, których nie przeznaczasz na zakup. Zacznij od
-              dzielnicy i profilu, a potem dopasuj założenia do swojej sytuacji.
+              Porównaj ratę kredytu, koszty najmu i inwestowanie pieniędzy, których nie wydajesz na zakup. Zacznij od
+              dzielnicy i swojej sytuacji, a potem dopasuj założenia.
             </p>
           </div>
           <p className="mvp-disclaimer">{mvpDisclaimer}</p>
@@ -729,7 +729,7 @@ export default function Dashboard() {
             <header>
               <div>
                 <h2>Wybierz dzielnice do porównania</h2>
-                <p>Możesz porównać maksymalnie 2 dzielnice naraz.</p>
+                <p>Możesz porównać do 2 dzielnic naraz.</p>
               </div>
               <button
                 type="button"
@@ -822,7 +822,7 @@ export default function Dashboard() {
             </div>
 
             <div className="map-legend">
-              <span>Najem w relacji do ceny</span>
+              <span>Stawka najmu względem ceny</span>
               <div />
               <small>niższa</small>
               <small>wyższa</small>
@@ -886,7 +886,7 @@ export default function Dashboard() {
             <div className="analysis-header">
               <div>
                 <h2>Porównanie dzielnic</h2>
-                <p>Zobacz, jak zmienia się wynik w wybranych dzielnicach Warszawy.</p>
+                <p>Sprawdź, jak wynik różni się między wybranymi dzielnicami Warszawy.</p>
               </div>
               <div>
                 <button className="ghost-action compact" disabled title="Porównanie profili nie jest jeszcze dostępne" type="button">
@@ -908,20 +908,20 @@ export default function Dashboard() {
                 <article className="district-card empty">
                   <Plus size={28} />
                   <h3>Dodaj drugą dzielnicę</h3>
-                  <p>Porównaj cenę, najem, moment opłacalności i wpływ własnych założeń.</p>
+                  <p>Porównaj cenę, najem, próg opłacalności i wpływ własnych założeń.</p>
                 </article>
               ) : null}
             </div>
 
             <div className="insight-strip">
               <div className="break-even-hero">
-                <span>Zakup zaczyna wypadać lepiej po</span>
+                <span>Kiedy zakup się broni</span>
                 <strong>{formatYear(result?.summary.breakEvenMedian ?? null)}</strong>
                 <small>
                   Zakres 95%: {formatYear(result?.summary.breakEvenLow ?? null)} - {formatYear(result?.summary.breakEvenHigh ?? null)}
                 </small>
                 <i className={isRunning ? "pulse" : ""}>
-                  {isRunning ? "Trwa przeliczanie" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% szans, że zakup wypada lepiej`}
+                  {isRunning ? "Trwa przeliczanie" : `${Math.round((result?.summary.buyWinsAtHorizon ?? 0) * 100)}% symulacji z przewagą zakupu`}
                 </i>
               </div>
               <div className="assumption-card">

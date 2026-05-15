@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-15 - Final human Polish copy pass
+
+- Made the landing page and calculator copy calmer, more direct and less product-like while preserving formulas, routes, layout and disclaimers.
+
 ## 2026-05-15 - Pre-merge calculator polish fixes
 
 - Prevented duplicate primary/comparison district cards, hardened shared hash restoration, improved district-selection accessibility and added a visible map data-load fallback.
