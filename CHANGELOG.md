@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-05-15 - Lightweight motion polish
+
+- Added subtle transform-and-opacity motion for landing section reveals, hero preview polish, card hover states and calculator action feedback while preserving formulas and chart performance.
+
 ## 2026-05-14 - Natural Polish copy pass
 
 - Refined Polish UX copy across the landing page and calculator to sound more natural, clear and human while preserving formulas, routes and disclaimers.

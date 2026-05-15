@@ -60,7 +60,7 @@ a {
     radial-gradient(circle at 18% 4%, rgba(49, 87, 255, 0.18), transparent 30%),
     radial-gradient(circle at 78% 8%, rgba(0, 174, 191, 0.14), transparent 24%);
   min-height: 100vh;
-  overflow-x: visible;
+  overflow-x: clip;
   padding: 22px clamp(18px, 4vw, 64px) 56px;
   position: relative;
 }
@@ -257,6 +257,20 @@ a {
   text-align: center;
 }
 
+.nav-cta,
+.landing-primary,
+.landing-secondary,
+.ghost-action,
+.primary-action,
+.icon-button,
+.avatar {
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
 .landing-secondary {
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(43, 60, 111, 0.13);
@@ -278,6 +292,7 @@ a {
 }
 
 .hero-proof span {
+  animation: metricSoftIn 0.58s ease-out both;
   background: rgba(255, 255, 255, 0.68);
   border: 1px solid rgba(43, 60, 111, 0.1);
   border-radius: 999px;
@@ -288,7 +303,16 @@ a {
   padding: 8px 11px;
 }
 
+.hero-proof span:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.hero-proof span:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
 .hero-product {
+  animation: heroProductFloat 7s ease-in-out infinite;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(241, 246, 255, 0.82)),
     #fff;
@@ -454,6 +478,18 @@ a {
   padding: 14px;
 }
 
+.preview-metrics div {
+  animation: metricSoftIn 0.54s ease-out both;
+}
+
+.preview-metrics div:nth-child(2) {
+  animation-delay: 0.09s;
+}
+
+.preview-metrics div:nth-child(3) {
+  animation-delay: 0.18s;
+}
+
 .preview-metrics strong {
   display: block;
   font-size: 1.42rem;
@@ -565,6 +601,10 @@ a {
   border-radius: 24px;
   box-shadow: 0 18px 50px rgba(36, 48, 88, 0.08);
   padding: 21px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .outcome-icon {
@@ -612,6 +652,10 @@ a {
   border: 1px solid rgba(43, 60, 111, 0.11);
   border-radius: 24px;
   box-shadow: 0 18px 50px rgba(36, 48, 88, 0.08);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .problem-grid article {
@@ -722,6 +766,10 @@ a {
   display: grid;
   gap: 12px;
   padding: 18px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .methodology-point {
@@ -733,6 +781,10 @@ a {
   gap: 14px;
   grid-template-columns: auto 1fr;
   padding: 17px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .methodology-point span {
@@ -793,6 +845,10 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 22px;
   padding: 18px;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .trust-card svg {
@@ -1058,6 +1114,7 @@ a {
 
 .action-feedback,
 .action-with-feedback:focus::after {
+  animation: feedbackSoftIn 0.18s ease-out both;
   background: rgba(32, 191, 117, 0.1);
   border: 1px solid rgba(32, 191, 117, 0.18);
   border-radius: 999px;
@@ -1355,6 +1412,9 @@ a {
   min-width: 0;
   padding: 5px 7px;
   text-align: left;
+  transition:
+    background-color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .district-list button strong {
@@ -1427,6 +1487,10 @@ a {
   box-shadow: var(--soft-shadow);
   min-width: 0;
   padding: 15px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .district-card.selected {
@@ -1494,6 +1558,10 @@ a {
   border-radius: 14px;
   min-width: 0;
   padding: 11px;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .metric-tile strong {
@@ -1587,6 +1655,10 @@ a {
   display: grid;
   gap: 10px;
   padding: 19px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .assumption-card strong {
@@ -1692,6 +1764,10 @@ input[type="range"] {
   justify-content: space-between;
   min-height: 48px;
   padding: 0 13px;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .toggle i {
@@ -1699,6 +1775,7 @@ input[type="range"] {
   border-radius: 999px;
   height: 22px;
   position: relative;
+  transition: background-color 0.18s ease;
   width: 42px;
 }
 
@@ -1746,6 +1823,141 @@ input[type="range"] {
 .recharts-wrapper text {
   fill: #68739a;
   font-size: 0.78rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-cta:hover,
+  .landing-primary:hover,
+  .landing-secondary:hover,
+  .ghost-action:not(:disabled):hover,
+  .primary-action:hover,
+  .icon-button:hover,
+  .avatar:hover {
+    transform: translateY(-1px);
+  }
+
+  .landing-primary:hover,
+  .primary-action:hover {
+    box-shadow: 0 20px 46px rgba(49, 87, 255, 0.34);
+  }
+
+  .landing-secondary:hover,
+  .nav-cta:hover,
+  .ghost-action:not(:disabled):hover,
+  .icon-button:hover {
+    box-shadow: 0 14px 34px rgba(36, 48, 88, 0.12);
+  }
+
+  .outcome-card:hover,
+  .problem-grid article:hover,
+  .step-card:hover,
+  .model-card:hover,
+  .methodology-card:hover,
+  .methodology-point:hover,
+  .district-card:hover,
+  .assumption-card:hover {
+    border-color: rgba(49, 87, 255, 0.24);
+    box-shadow: 0 22px 58px rgba(36, 48, 88, 0.12);
+    transform: translateY(-3px);
+  }
+
+  .trust-card:hover {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-3px);
+  }
+
+  .metric-tile:hover,
+  .toggle:hover {
+    border-color: rgba(49, 87, 255, 0.2);
+    box-shadow: 0 10px 24px rgba(36, 48, 88, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .district-list button:hover {
+    transform: translateX(2px);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .landing-band,
+  .trust-section,
+  .final-cta {
+    animation: sectionReveal both;
+    animation-range: entry 0% cover 24%;
+    animation-timeline: view();
+  }
+}
+
+@keyframes heroProductFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes metricSoftIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes feedbackSoftIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .hero-product,
+  .hero-proof span,
+  .preview-metrics div,
+  .landing-band,
+  .trust-section,
+  .final-cta,
+  .action-feedback,
+  .action-with-feedback:focus::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (max-width: 1380px) {

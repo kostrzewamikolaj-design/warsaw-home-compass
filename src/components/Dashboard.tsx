@@ -1,7 +1,7 @@
 "use client";
 
 import bbox from "@turf/bbox";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -251,16 +251,24 @@ function DistrictCard({
   district,
   summary,
   selected,
-  index
+  index,
+  reduceMotion = false
 }: {
   district: DistrictMarket;
   summary?: SimulationSummary;
   selected: boolean;
   index: number;
+  reduceMotion?: boolean;
 }) {
   const ratio = district.rentPerM2 / district.pricePerM2;
   return (
-    <motion.article className={`district-card ${selected ? "selected" : ""}`} layout>
+    <motion.article
+      animate={{ opacity: 1, y: 0 }}
+      className={`district-card ${selected ? "selected" : ""}`}
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      layout
+      transition={{ duration: reduceMotion ? 0 : 0.22, ease: "easeOut", layout: { duration: reduceMotion ? 0 : 0.18 } }}
+    >
       <header>
         <div className="district-title">
           <i>{index}</i>
@@ -286,6 +294,7 @@ function DistrictCard({
 }
 
 export default function Dashboard() {
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const [selectedId, setSelectedId] = useState("mokotow");
   const [compareId, setCompareId] = useState<string | null>("wola");
   const [settings, setSettings] = useState<Settings>({ ...defaultSettings });
@@ -412,10 +421,10 @@ export default function Dashboard() {
           [west, south],
           [east, north]
         ],
-        { padding: 72, duration: 900, essential: true }
+        { padding: 72, duration: prefersReducedMotion ? 0 : 900, essential: false }
       );
     }
-  }, [enrichedGeojson, selected.name]);
+  }, [enrichedGeojson, prefersReducedMotion, selected.name]);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings((current) => ({ ...current, [key]: value }));
 
@@ -607,7 +616,20 @@ export default function Dashboard() {
               AC
             </button>
           </div>
-          {actionMessage ? <p className="action-feedback" role="status">{actionMessage}</p> : null}
+          <AnimatePresence>
+            {actionMessage ? (
+              <motion.p
+                animate={{ opacity: 1, y: 0 }}
+                className="action-feedback"
+                exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: -6 }}
+                role="status"
+                transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: "easeOut" }}
+              >
+                {actionMessage}
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
         </header>
 
         <section className="mvp-intro surface">
@@ -688,7 +710,13 @@ export default function Dashboard() {
                 </g>
               </svg>
               {activeShape?.market ? (
-                <motion.div className="map-popover" key={activeShape.renderKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div
+                  animate={{ opacity: 1, y: 0 }}
+                  className="map-popover"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  key={activeShape.renderKey}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: "easeOut" }}
+                >
                   <span>{activeShape.districtId === selectedId ? "Wybrana dzielnica" : "Podgląd"}</span>
                   <strong>{activeShape.name}</strong>
                   <small>
@@ -759,8 +787,8 @@ export default function Dashboard() {
             </div>
 
             <div className="district-card-grid">
-              <DistrictCard district={selected} summary={result?.summary} selected index={1} />
-              {compare ? <DistrictCard district={compare} summary={result?.compareSummary} selected={false} index={2} /> : null}
+              <DistrictCard district={selected} summary={result?.summary} selected index={1} reduceMotion={prefersReducedMotion} />
+              {compare ? <DistrictCard district={compare} summary={result?.compareSummary} selected={false} index={2} reduceMotion={prefersReducedMotion} /> : null}
               {!compare ? (
                 <article className="district-card empty">
                   <Plus size={28} />
